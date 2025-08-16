@@ -1,3 +1,4 @@
+#!/bin/bash
 echo "===========Setting up MAVSDK==========="
 cd dependencies/
 rm -rf MAVSDK-Python/

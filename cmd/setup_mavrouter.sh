@@ -1,3 +1,4 @@
+#!/bin/bash
 echo "===========Setting up MAVLink Router==========="
 cd dependencies/
 rm -rf mavlink-router/
