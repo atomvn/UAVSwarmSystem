@@ -13,3 +13,7 @@ curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo ap
 sudo apt update 
 #Install ROS Noetic Desktop Full and Gazebo11
 sudo apt install ros-noetic-desktop-full
+
+#source to every terminal
+echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+source ~/.bashrc
