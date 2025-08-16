@@ -14,10 +14,10 @@ ROS-Noetic / ROS-Foxy
 bash cmd/setup_miniconda.sh
 ```
 
-### 1. Build OpenCV:
+### 1. Setup OpenCV:
 
 ```
-bash cmd/build_opencv.sh
+bash cmd/setup_opencv.sh
 ```
 
 ### 2. Gazebo ROS:
@@ -27,10 +27,9 @@ Follow this instruction to install ROS: [Install ROS Noetic](https://wiki.ros.or
 Then, to install [Gazebo 9](https://classic.gazebosim.org/tutorials?cat=install&tut=install_ubuntu&ver=9.0)
 
 ```
-curl -sSL http://get.gazebosim.org | sh
+bash cmd/setup_ROS_GZ.sh
 ```
-
-Check if gazebo is installed:
+-Check if gazebo is installed:
 
 ```
 gazebo
@@ -63,10 +62,7 @@ bash cmd/setup_mavrouter.sh
 ### 6. QT5
 
 ```
-sudo apt-get install python3-pyqt5
-sudo apt-get install qttools5-dev-tools
-sudo apt-get install qttools5-dev
-sudo apt install python3-pyqt5.qtwebengine
+bash cmd/setup_qt.sh
 ```
 
 ### 7. [QGroundControl Ground Control Station](https://github.com/mavlink/qgroundcontrol/releases) (Optional)
