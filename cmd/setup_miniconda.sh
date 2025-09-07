@@ -16,9 +16,7 @@ source ~/.bashrc
 conda config --set auto_activate_base false
 
 echo "Tạo môi trường conda 'uav' với Python 3.9..."
-conda create -n uav python=3.9 -y
+conda create -n uav1 python=3.9 -y
 conda activate uav
-#install numpy in conda evironment first
-conda install numpy
 
 echo "Hoàn tất cài đặt Miniconda và môi trường 'uav'."
