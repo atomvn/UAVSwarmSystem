@@ -14,7 +14,10 @@ from typing import Any, Dict, List, Optional, Union
 
 import cv2
 import numpy as np
-from asyncqt import QEventLoop
+#10/09/2025 HaoNV35 Start.
+# from asyncqt import QEventLoop
+from qasync import QEventLoop
+#10/09/2025 HaoNV35 End.
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 
@@ -631,7 +634,6 @@ def run() -> None:
         logger.critical(f"Application startup failed: {e}")
         print(f"Fatal error: {e}")
         sys.exit(1)
-
 
 if __name__ == "__main__":
     run()
