@@ -18,7 +18,7 @@ from typing import Optional
 
 from mavsdk import System
 
-from utils.logger import get_logger
+from logger import get_logger
 
 # Initialize logger
 logger = get_logger(
@@ -97,17 +97,28 @@ async def establish_connection(
     """
     # Start connection process
     await drone.connect(system_address=system_address)
-    
+    async def wait_for_connection():
+        async for state in drone.core.connection_state():
+            if state.is_connected:
+                logger.info(f"Connected to drone {id} successfully")
+                return
     # Create connection task with timeout
     try:
-        async with asyncio.timeout(timeout):
-            async for state in drone.core.connection_state():
-                if state.is_connected:
-                    logger.info(f"Connected to drone {id} successfully")
-                    return
+        #10/09/2025 HaoNV35 Start.
+        await asyncio.wait_for(wait_for_connection(), timeout=timeout)
+        # async with asyncio.timeout(timeout):
+        #     async for state in drone.core.connection_state():
+        #         if state.is_connected:
+        #             logger.info(f"Connected to drone {id} successfully")
+        #             return
+        #10/09/2025 HaoNV35 End.
     except asyncio.TimeoutError:
         logger.error(f"Timeout connecting to drone {id}")
         raise TimeoutError(f"Could not connect to drone {id} at {system_address}")
+    #10/09/2025 HaoNV35 Start.
+    # await asyncio.sleep(1)
+    # await drone.action.takeoff()
+    #10/09/2025 HaoNV35 End.
 
 
 async def verify_health(drone: System, id: int, timeout: int) -> None:
@@ -143,6 +154,10 @@ async def observe_shell(drone: System) -> None:
         drone: MAVSDK System object
     """
     try:
+        #10/09/2025 HaoNV35 Start.
+        # while not await drone.core.connection_state().is_connected:
+        await asyncio.sleep(1)
+        #10/09/2025 HaoNV35 End.
         async for output in drone.shell.receive():
             # Print received shell output, ensuring prompt remains intact
             if output.strip():  # Only print non-empty lines
@@ -268,8 +283,15 @@ async def cleanup() -> None:
     """Clean up resources before exiting."""
     # Clean up file handles
     try:
+        #10/09/2025 HaoNV35 Start.
         # Remove stdin reader if it was added
-        loop = asyncio.get_event_loop()
+        # loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        #10/09/2025 HaoNV35 End.
         try:
             loop.remove_reader(sys.stdin)
         except Exception:
@@ -289,7 +311,15 @@ if __name__ == "__main__":
     finally:
         # Ensure proper cleanup
         try:
-            loop = asyncio.get_event_loop()
+            #10/09/2025 HaoNV35 Start.
+            # Remove stdin reader if it was added
+            # loop = asyncio.get_event_loop()
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            #10/09/2025 HaoNV35 End.
             loop.run_until_complete(cleanup())
             
             # Cancel pending tasks
