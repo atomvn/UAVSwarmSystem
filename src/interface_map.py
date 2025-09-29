@@ -169,6 +169,9 @@ class Map(Interface):
                 self.ui.btn_map_split_area: self.btn_split_area_callback,
                 self.ui.btn_map_reduce_points: self.btn_map_reduce_points_callback,
                 self.ui.btn_map_toggle_route: self.btn_toggle_route_callback,
+                #HaoNV35 Start.
+                self.ui.btn_delete_area: self.delete_all_areas,
+                #HaoNV35 End.
             }
             
             for button, callback in button_callbacks.items():
@@ -670,6 +673,25 @@ class Map(Interface):
                 src_msg="Toggle route",
                 type_msg="error"
             )
+    
+    #HaoNV35 Start.
+    def delete_all_areas(self):
+        """delete all areas on the map"""
+        if self.debug:
+            print("Button clicked: Delete all areas")
+
+        try:
+            self.rescue_map.deleteAllAreas()
+            self.drone_areas_dict = {}
+            self.ovv_map.deleteAllAreas()
+            self.ovv_map.deletePolygon("Polygon")
+        except Exception as e:
+            logger.error(f"Failed to delete all areas on the map: {e}")
+            self.popup_msg(
+                f"Error deleting all areas: {e}",
+                src_msg="Delete all areas",
+                type_msg="error"
+            )
 
     def noArea_line_edit_callback(self):
         """Update the number of areas parameter from the UI input"""
@@ -854,8 +876,14 @@ class Map(Interface):
                     for key in self.drone_areas_dict:
                         self.rescue_map.deletePolygon(key)
                         self.ovv_map.deletePolygon(key)
+                    #HaoNV35 Start.    
+                    #self.drone_areas_dict = {}
+                    self.rescue_map.deleteAllAreas()
+                    self.rescue_map.deletePolygon("Polygon")
+                    self.ovv_map.deletePolygon("Polygon")
                     self.drone_areas_dict = {}
-                    
+                    self.geodata.setdefault("Polygon", []).clear()
+                    #HaoNV35 End.
                 elif obj_type == 'drones' and self.drone_initial_positions:
                     for key in self.drone_initial_positions:
                         self.rescue_map.deleteMarker(key)
