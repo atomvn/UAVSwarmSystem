@@ -539,3 +539,10 @@ class MapEngine(QWebEngineView):
             JavaScript response
         """
         return self.runScript(f"deletePolygonJs(key={json.dumps(key)});")
+        
+    #HaoNV35 Start.
+    def deleteAllAreas(self) -> Any:
+        return self.runScript(f"deleteAllAreasJs();")
+    #HaoNV35 End.
+
+    
