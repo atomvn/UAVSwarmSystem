@@ -241,7 +241,7 @@ background-color: rgb(252, 175, 62);</string>
              <enum>QTabWidget::East</enum>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>7</number>
             </property>
             <property name="tabBarAutoHide">
              <bool>true</bool>
@@ -9102,7 +9102,7 @@ background-color: rgb(252, 175, 62);</string>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_27" stretch="10,0,10">
                 <item>
-                 <widget class="QWebView" name="Overview_map_view">
+                 <widget class="QWebView" name="Overview_map_view" native="true">
                   <property name="maximumSize">
                    <size>
                     <width>810</width>
@@ -9118,7 +9118,7 @@ background-color: rgb(252, 175, 62);</string>
                   <property name="autoFillBackground">
                    <bool>false</bool>
                   </property>
-                  <property name="url">
+                  <property name="url" stdset="0">
                    <url>
                     <string>file:///home/phgnam-d/Workspace/SwarmUAV-UET/assets/map.html</string>
                    </url>
@@ -10751,7 +10751,7 @@ background-color: rgb(114, 159, 207);</string>
                 <property name="flat">
                  <bool>false</bool>
                 </property>
-                <layout class="QVBoxLayout" name="verticalLayout_12" stretch="0,0,1,1,1,1,1,1,1,5">
+                <layout class="QVBoxLayout" name="verticalLayout_12" stretch="0,0,1,1,1,1,1,1,1,0,5">
                  <property name="sizeConstraint">
                   <enum>QLayout::SetMaximumSize</enum>
                  </property>
@@ -10971,7 +10971,27 @@ QPushButton::pressed{background-color: rgb(255, 0, 0);}</string>
                   </widget>
                  </item>
                  <item>
+                  <widget class="QPushButton" name="btn_delete_area">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QPushButton{background-color: rgb(243, 243, 243);}
+QPushButton::pressed{background-color: rgb(255, 0, 0);}</string>
+                   </property>
+                   <property name="text">
+                    <string>Delete area</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QLabel" name="spacing_label">
+                   <property name="lineWidth">
+                    <number>1</number>
+                   </property>
                    <property name="text">
                     <string/>
                    </property>
@@ -10985,7 +11005,7 @@ QPushButton::pressed{background-color: rgb(255, 0, 0);}</string>
            </layout>
           </item>
           <item>
-           <widget class="QWebView" name="MapWebView">
+           <widget class="QWebView" name="MapWebView" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -11001,12 +11021,12 @@ QPushButton::pressed{background-color: rgb(255, 0, 0);}</string>
             <property name="locale">
              <locale language="Vietnamese" country="Vietnam"/>
             </property>
-            <property name="url">
+            <property name="url" stdset="0">
              <url>
               <string>file:///home/phgnam-d/Workspace/SwarmUAV-UET/assets/map.html</string>
              </url>
             </property>
-            <property name="zoomFactor">
+            <property name="zoomFactor" stdset="0">
              <double>1.000000000000000</double>
             </property>
            </widget>
