@@ -84,11 +84,13 @@ function initialize() {
                 allowIntersection: false,            
             },
 
-            polyline: {
-                shapeOptions: {
-                    color: 'red'
-                },
-            },
+            //HaoNV35 Start.
+            // polyline: {
+            //     shapeOptions: {
+            //         color: 'red'
+            //     },
+            // },
+            //HaoNV35 End.
             
             rect: {
                 shapeOptions: {
@@ -103,6 +105,7 @@ function initialize() {
 
             circle: false,
             circlemarker: false, //  type has been disabled.
+            polyline: false,
         },
         edit: {
             featureGroup: drawnItems,
@@ -282,3 +285,18 @@ function deletePolygonJs(key) {
     map.removeLayer(polygons[key]);
     delete polygons[key];
 }
+
+//HaoNV35 Start.
+function deleteAllAreasJs() {
+    for (i in map._layers) {
+        if(map._layers[i]._path != undefined) {
+            try {
+                map.removeLayer(map._layers[i]);
+            }
+            catch(e) {
+                console.log("problem with " + e + map._layers[i]);
+            }
+        }
+    }
+}
+//HaoNV35 End.
