@@ -894,3 +894,8 @@ def find_path(points, point_A):
     list_A.extend(path_list_2)  # nối 2 phần
 
     return list_A
+
+def calculate_grid_size_from_hfov_and_vfov(h_fov, v_fov, uav_alt, h_overlap, v_overlap):
+    grid_width = 2 * uav_alt * math.tan(math.radians(h_fov / 2)) - h_overlap
+    grid_height = 2 * uav_alt * math.tan(math.radians(v_fov / 2)) - v_overlap
+    return grid_width, grid_height

@@ -217,6 +217,9 @@ class Map(Interface):
             # Group grid points by area
             area_grid_points = {}
             for key, value in self.drone_markers_dict.items():
+                #HaoNV35 Start.
+                print(key, value)
+                #HaoNV35 End.
                 area_index = int(key.split("A")[1].split("P")[0])
                 point_index = int(key.split("P")[1])
                 area_grid_points.setdefault(area_index, []).append(value)

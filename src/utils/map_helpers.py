@@ -317,7 +317,9 @@ def split_polygon_into_areas_old(vertices, number_of_parts):
 
 def split_grids(rotated_area, angle, midpoint, min_lat, min_lon, grid_size, n_areas):
 
-    distance = grid_size
+    #HaoNV35 Start.
+    distance = 10
+    #HaoNV35 End.
 
     if n_areas in (0, 1):
         area = rotated_area[0]
@@ -372,7 +374,9 @@ def split_grids(rotated_area, angle, midpoint, min_lat, min_lon, grid_size, n_ar
         # Convert the vertices back to a list of tuples
         points = [tuple(point) for point in hull_vertices]
 
+        #HaoNV35 Start.
         grid_points = generate_grid(points, int(distance))
+        #HaoNV35 End.
 
         unrotated_area = []
         for point in grid_points:
@@ -410,7 +414,10 @@ def split_grids(rotated_area, angle, midpoint, min_lat, min_lon, grid_size, n_ar
             # Convert the vertices back to a list of tuples
             points = [tuple(point) for point in hull_vertices]
 
-            grid_points = generate_grid(points, float(distance))
+            #HaoNV35 Start.
+            # grid_points = generate_grid(points, float(distance))
+            grid_points = generate_waypoints(points, 10, 10)
+            #HaoNV35 End.
 
             areas_dot.append(grid_points)
 
@@ -438,7 +445,6 @@ def split_grids(rotated_area, angle, midpoint, min_lat, min_lon, grid_size, n_ar
             grid_GPS.append(per_GPS_list)
 
         return grid_GPS
-    pass
 
 
 def generate_grid(vertices, spacing_m):
@@ -454,6 +460,8 @@ def generate_grid(vertices, spacing_m):
     max_x = max(v[0] for v in vertices)
     min_y = min(v[1] for v in vertices)
     max_y = max(v[1] for v in vertices)
+    #HaoN35 Start.
+    # print(min_x, max_x, min_y, max_y)
 
     points = []
     for i in range(int((max_y - min_y) / spacing_m) + 1):
@@ -465,6 +473,76 @@ def generate_grid(vertices, spacing_m):
 
     return points
 
+def generate_waypoints(vertices, grid_width, grid_height):
+    min_x = min(v[0] for v in vertices)
+    max_x = max(v[0] for v in vertices)
+    min_y = min(v[1] for v in vertices)
+    max_y = max(v[1] for v in vertices)
+    print("vertices: ", vertices)
+    print("min_x, max_x, min_y, max_y: ", min_x, max_x, min_y, max_y)
+
+    longest_edge_length, coord = find_longest_edge(vertices)
+    print("Coord, longest_edge_length: ", coord, longest_edge_length)
+    x_root_coord = coord[0][0]
+    y_root_coord = coord[0][1]
+    if coord[1][1] != coord[0][1]:
+        unit_vector = (coord[1][0] - coord[0][0], coord[1][1] - coord[0][1]) / longest_edge_length
+    else:
+        unit_vector = (1, 1) 
+    print("unit_vector: ", unit_vector)
+
+    grid_size = calculate_grid_size()
+    grid_width = grid_size[0][0]
+    grid_height = grid_size[0][1]
+    print("Grid width, height: ", grid_width, grid_height)
+
+    # longest_edge_length, longest_edge_coord = find_longest_edge(vertices)
+    area_width = max_x - min_x
+    area_height = max_y - min_y
+    print("Area width, height: ", area_width, area_height)
+
+    m = int(area_width/grid_width) + 1
+    m_ = int(area_height/grid_height) + 1
+    print("m, m_: ", m, m_)
+
+    new_grid_width = (area_width - grid_width) / (int(area_width / grid_width)) 
+    if m_ % 2 != 0:
+        m_ += 1
+    new_grid_height = (area_height - grid_height) / (m_ - 1)
+
+    print("new_grid_width, new_grid_height: ", new_grid_width, new_grid_height)
+
+    points = []
+    for i in range(m_): 
+        for j in range(m):
+            if 0 == i and 0 == j:
+                x = x_root_coord + grid_width / 2
+                y = y_root_coord + grid_height / 2
+                if ray_casting_point_in_polygon((x, y), vertices):
+                    points.append((x, y))
+                # print(points)
+            else:
+                x = x_root_coord + grid_width/2 + (j * new_grid_width * unit_vector[0])
+                y = y_root_coord + grid_height/2 + (i * new_grid_height * unit_vector[1])
+                if ray_casting_point_in_polygon((x, y), vertices):
+                    points.append((x, y))
+    return points
+
+#HaoNV35 Start.
+def calculate_grid_size():
+    uav_num = 5
+    h_fov = (90, 100, 100, 100, 100)
+    v_fov = (52, 52, 52, 52, 52)
+    uav_alt = (10, 10, 10, 10, 10)
+    h_overleap = 0
+    v_overleap = 0
+    grid_size = []  
+    for i in range(uav_num): 
+        grid_width, grid_height = calculate_grid_size_from_hfov_and_vfov(h_fov[i], v_fov[i], uav_alt[i], h_overleap, v_overleap)
+        grid_size.append((grid_width, grid_height))
+    # print(grid_size)
+    return grid_size
+#HaoNV35 End.
 
 def remove_duplicate_pts(vertices):
     """
