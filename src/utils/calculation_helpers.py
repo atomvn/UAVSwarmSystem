@@ -924,7 +924,7 @@ def find_parallel_polygon_intersection(vertices, spacing, number_of_lines):
     min_y = min(v[1] for v in vertices)
     max_y = max(v[1] for v in vertices)
 
-    intersection_points = [longest_edge[0], longest_edge[1]]
+    intersection_points = []
     for i in range(-number_of_lines, number_of_lines + 1):
         if i == 0:
             continue

@@ -482,10 +482,14 @@ def generate_waypoints(vertices):
     print("vertices: ", vertices)
     print("min_x, max_x, min_y, max_y: ", min_x, max_x, min_y, max_y)
 
-    # longest_edge_length, coord = find_longest_edge(vertices)
-    # print("Coord, longest_edge_length: ", coord, longest_edge_length)
-    # x_root_coord = coord[0][0]
-    # y_root_coord = coord[0][1]
+    longest_edge_length, coord = find_longest_edge(vertices)
+    print("Coord, longest_edge_length: ", coord, longest_edge_length)
+    if coord[0][0] < coord[1][0]:
+        x_root_coord = coord[0][0]
+        y_root_coord = coord[0][1]
+    else:
+        x_root_coord = coord[1][0]
+        y_root_coord = coord[1][1]
 
     grid_size = calculate_grid_size()
     grid_width = grid_size[0][0]
@@ -501,20 +505,22 @@ def generate_waypoints(vertices):
     m_ = int(area_height/grid_height) + 1
     print("m, m_: ", m, m_)
 
-    if m_ > 2:
-        new_grid_height = (area_height - grid_height) / (int(area_height / grid_height))
+    if m_ > 1:
+        new_grid_height = area_height / m_
     else:
-        new_grid_height = grid_height
+        new_grid_height = area_height
 
     intersection_points, segment_length = find_parallel_polygon_intersection(vertices, new_grid_height, m_)
 
     new_grid_width = []
+    root_grid = (area_width - grid_width) / (int(area_width / grid_width))
+    new_grid_width.append(root_grid)
     for i in range(len(segment_length)):
         # grid = (segment_length[i] - grid_width) / (int(segment_length[i] / grid_width))
         if int(segment_length[i] / grid_width) + 1 >= 2:
             grid = (segment_length[i] - grid_width) / (int(segment_length[i] / grid_width))
         else:
-            grid = grid_width
+            grid = segment_length[i]
         new_grid_width.append(grid)
 
     print("New grid width: ", new_grid_width)
@@ -528,12 +534,13 @@ def generate_waypoints(vertices):
             starting_points.append(p1)
         else:
             starting_points.append(p2)
-    print("Starting points: ", starting_points)
-    if starting_points[0][1] < starting_points[1][1]:
+    if starting_points[0][1] > y_root_coord:
         flag = True
+        starting_points.sort(key=lambda x: x[1])
     else: 
         flag = False
-
+        starting_points.sort(key=lambda x: x[1], reverse=True) # sort by y coordinat
+    print("Starting points: ", starting_points)
     points = []
     for i in range(m_): 
         for j in range(m):
@@ -546,26 +553,20 @@ def generate_waypoints(vertices):
 
             if flag:
                 if 0 == i:
-                    if 0 == j:
-                        x = starting_points[i][0] + grid_width / 2 
-                    else:
-                        x = starting_points[i][0] + grid_width / 2 + (j * new_grid_width[i])
-                    y = starting_points[i][1] + new_grid_height / 2 
+                    x = x_root_coord + grid_width / 2 + (j * new_grid_width[i])
+                    y = y_root_coord + new_grid_height / 2 
                 else:
-                    x = starting_points[i][0] + grid_width/2 + (j * new_grid_width[i])
-                    y = starting_points[i][1] + new_grid_height/2
+                    x = starting_points[i-1][0] + grid_width/2 + (j * new_grid_width[i])
+                    y = starting_points[i-1][1] + new_grid_height/2
             else:
                 if 0 == i:
-                    if 0 == j:
-                        x = starting_points[i][0] + grid_width / 2 
-                    else:
-                        x = starting_points[i][0] + grid_width / 2 + (j * new_grid_width[i])
-                    y = starting_points[i][1] - new_grid_height / 2 
+                    x = x_root_coord + grid_width / 2 + (j * new_grid_width[i])
+                    y = y_root_coord - new_grid_height / 2 
                 else:
-                    x = starting_points[i][0] + grid_width/2 + (j * new_grid_width[i])
-                    y = starting_points[i][1] - new_grid_height/2
-            if ray_casting_point_in_polygon((x, y), vertices):
-                points.append((x, y))
+                    x = starting_points[i-1][0] + grid_width/2 + (j * new_grid_width[i])
+                    y = starting_points[i-1][1] - new_grid_height/2
+            # if ray_casting_point_in_polygon((x, y), vertices):
+            points.append((x, y))
     print("Generated points: ", points)
     return points
 
