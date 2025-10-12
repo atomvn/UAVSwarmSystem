@@ -416,7 +416,7 @@ def split_grids(rotated_area, angle, midpoint, min_lat, min_lon, grid_size, n_ar
 
             #HaoNV35 Start.
             # grid_points = generate_grid(points, float(distance))
-            grid_points = generate_waypoints(points, 10, 10)
+            grid_points = generate_waypoints(points)
             #HaoNV35 End.
 
             areas_dot.append(grid_points)
@@ -473,7 +473,8 @@ def generate_grid(vertices, spacing_m):
 
     return points
 
-def generate_waypoints(vertices, grid_width, grid_height):
+def generate_waypoints(vertices):
+    print("===================================================================================")
     min_x = min(v[0] for v in vertices)
     max_x = max(v[0] for v in vertices)
     min_y = min(v[1] for v in vertices)
@@ -481,15 +482,10 @@ def generate_waypoints(vertices, grid_width, grid_height):
     print("vertices: ", vertices)
     print("min_x, max_x, min_y, max_y: ", min_x, max_x, min_y, max_y)
 
-    longest_edge_length, coord = find_longest_edge(vertices)
-    print("Coord, longest_edge_length: ", coord, longest_edge_length)
-    x_root_coord = coord[0][0]
-    y_root_coord = coord[0][1]
-    if coord[1][1] != coord[0][1]:
-        unit_vector = (coord[1][0] - coord[0][0], coord[1][1] - coord[0][1]) / longest_edge_length
-    else:
-        unit_vector = (1, 1) 
-    print("unit_vector: ", unit_vector)
+    # longest_edge_length, coord = find_longest_edge(vertices)
+    # print("Coord, longest_edge_length: ", coord, longest_edge_length)
+    # x_root_coord = coord[0][0]
+    # y_root_coord = coord[0][1]
 
     grid_size = calculate_grid_size()
     grid_width = grid_size[0][0]
@@ -505,27 +501,72 @@ def generate_waypoints(vertices, grid_width, grid_height):
     m_ = int(area_height/grid_height) + 1
     print("m, m_: ", m, m_)
 
-    new_grid_width = (area_width - grid_width) / (int(area_width / grid_width)) 
-    if m_ % 2 != 0:
-        m_ += 1
-    new_grid_height = (area_height - grid_height) / (m_ - 1)
+    if m_ > 2:
+        new_grid_height = (area_height - grid_height) / (int(area_height / grid_height))
+    else:
+        new_grid_height = grid_height
 
-    print("new_grid_width, new_grid_height: ", new_grid_width, new_grid_height)
+    intersection_points, segment_length = find_parallel_polygon_intersection(vertices, new_grid_height, m_)
+
+    new_grid_width = []
+    for i in range(len(segment_length)):
+        # grid = (segment_length[i] - grid_width) / (int(segment_length[i] / grid_width))
+        if int(segment_length[i] / grid_width) + 1 >= 2:
+            grid = (segment_length[i] - grid_width) / (int(segment_length[i] / grid_width))
+        else:
+            grid = grid_width
+        new_grid_width.append(grid)
+
+    print("New grid width: ", new_grid_width)
+    print("New grid height: ", new_grid_height)
+
+    starting_points = []
+    for i in range(1, len(intersection_points), 2):
+        p1 = intersection_points[i]
+        p2 = intersection_points[i - 1]
+        if p1[0] < p2[0]:
+            starting_points.append(p1)
+        else:
+            starting_points.append(p2)
+    print("Starting points: ", starting_points)
+    if starting_points[0][1] < starting_points[1][1]:
+        flag = True
+    else: 
+        flag = False
 
     points = []
     for i in range(m_): 
         for j in range(m):
-            if 0 == i and 0 == j:
-                x = x_root_coord + grid_width / 2
-                y = y_root_coord + grid_height / 2
-                if ray_casting_point_in_polygon((x, y), vertices):
-                    points.append((x, y))
+            # if 0 == i and 0 == j:
+            #     x = x_root_coord + grid_width / 2
+            #     y = y_root_coord + grid_height / 2
+            #     if ray_casting_point_in_polygon((x, y), vertices):
+            #         points.append((x, y))
                 # print(points)
+
+            if flag:
+                if 0 == i:
+                    if 0 == j:
+                        x = starting_points[i][0] + grid_width / 2 
+                    else:
+                        x = starting_points[i][0] + grid_width / 2 + (j * new_grid_width[i])
+                    y = starting_points[i][1] + new_grid_height / 2 
+                else:
+                    x = starting_points[i][0] + grid_width/2 + (j * new_grid_width[i])
+                    y = starting_points[i][1] + new_grid_height/2
             else:
-                x = x_root_coord + grid_width/2 + (j * new_grid_width * unit_vector[0])
-                y = y_root_coord + grid_height/2 + (i * new_grid_height * unit_vector[1])
-                if ray_casting_point_in_polygon((x, y), vertices):
-                    points.append((x, y))
+                if 0 == i:
+                    if 0 == j:
+                        x = starting_points[i][0] + grid_width / 2 
+                    else:
+                        x = starting_points[i][0] + grid_width / 2 + (j * new_grid_width[i])
+                    y = starting_points[i][1] - new_grid_height / 2 
+                else:
+                    x = starting_points[i][0] + grid_width/2 + (j * new_grid_width[i])
+                    y = starting_points[i][1] - new_grid_height/2
+            if ray_casting_point_in_polygon((x, y), vertices):
+                points.append((x, y))
+    print("Generated points: ", points)
     return points
 
 #HaoNV35 Start.

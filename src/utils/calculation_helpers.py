@@ -722,6 +722,7 @@ def find_polygon_edges(positions):
     points = np.array(positions)
 
     # Calculate the convex hull
+    print(points)
     hull = ConvexHull(points)
 
     # Extract the vertices of the convex hull
@@ -899,3 +900,52 @@ def calculate_grid_size_from_hfov_and_vfov(h_fov, v_fov, uav_alt, h_overlap, v_o
     grid_width = 2 * uav_alt * math.tan(math.radians(h_fov / 2)) - h_overlap
     grid_height = 2 * uav_alt * math.tan(math.radians(v_fov / 2)) - v_overlap
     return grid_width, grid_height
+
+def find_hor_line_segment_intersection(y, p1, p2):
+    x1, y1 = p1 
+    x2, y2 = p2
+
+    if y1 == y2:
+        return None
+    if(y1 <= y <= y2) or (y2 <= y <= y1):
+        t = (y - y1) / (y2 - y1)
+        if 0 <= t <= 1:
+            x = x1 + t * (x2 - x1)
+            return (x, y)
+    return None
+
+def find_parallel_polygon_intersection(vertices, spacing, number_of_lines):
+    longest_edge_length, longest_edge = find_longest_edge(vertices)
+    x1, y1 = longest_edge[0]
+    x2, y2 = longest_edge[1]
+
+    min_x = min(v[0] for v in vertices)
+    max_x = max(v[0] for v in vertices)
+    min_y = min(v[1] for v in vertices)
+    max_y = max(v[1] for v in vertices)
+
+    intersection_points = [longest_edge[0], longest_edge[1]]
+    for i in range(-number_of_lines, number_of_lines + 1):
+        if i == 0:
+            continue
+        y = y1 + i * spacing
+        if min_y < y < max_y:
+            for j in range(len(vertices)):
+                x3, y3 = vertices[j]
+                x4, y4 = vertices[(j+1) % len(vertices)]
+                intersection = find_hor_line_segment_intersection(y, (x3, y3), (x4, y4))
+                if intersection:
+                    intersection_points.append(intersection)
+    print("Number of intersection points:", len(intersection_points))
+    print("Intersection points:", intersection_points)
+    segment_length = []
+    for i in range(1, len(intersection_points), 2):
+        p1 = intersection_points[i]
+        p2 = intersection_points[i-1]
+        length = np.linalg.norm(np.array(p1) - np.array(p2))
+        print("Length:", length)
+        if length > 0: 
+            segment_length.append(length)
+    print("Segment lengths:", segment_length)
+    return intersection_points, segment_length
+
