@@ -936,6 +936,12 @@ def find_parallel_polygon_intersection(vertices, spacing, number_of_lines):
                 intersection = find_hor_line_segment_intersection(y, (x3, y3), (x4, y4))
                 if intersection:
                     intersection_points.append(intersection)
+    if intersection_points[0][1] > y1:
+        flag = True
+        intersection_points.sort(key=lambda x: x[1])
+    else: 
+        flag = False
+        intersection_points.sort(key=lambda x: x[1], reverse=True) # sort by y coordinat
     print("Number of intersection points:", len(intersection_points))
     print("Intersection points:", intersection_points)
     segment_length = []
@@ -947,5 +953,5 @@ def find_parallel_polygon_intersection(vertices, spacing, number_of_lines):
         if length > 0: 
             segment_length.append(length)
     print("Segment lengths:", segment_length)
-    return intersection_points, segment_length
+    return intersection_points, segment_length, flag
 

@@ -415,8 +415,8 @@ def split_grids(rotated_area, angle, midpoint, min_lat, min_lon, grid_size, n_ar
             points = [tuple(point) for point in hull_vertices]
 
             #HaoNV35 Start.
-            # grid_points = generate_grid(points, float(distance))
             grid_points = generate_waypoints(points)
+            # grid_points = generate_waypoints(points)
             #HaoNV35 End.
 
             areas_dot.append(grid_points)
@@ -510,11 +510,11 @@ def generate_waypoints(vertices):
     else:
         new_grid_height = area_height
 
-    intersection_points, segment_length = find_parallel_polygon_intersection(vertices, new_grid_height, m_)
+    intersection_points, segment_length, flag = find_parallel_polygon_intersection(vertices, new_grid_height, m_)
 
     new_grid_width = []
-    root_grid = (area_width - grid_width) / (int(area_width / grid_width))
-    new_grid_width.append(root_grid)
+    root_grid = (longest_edge_length - grid_width) / (int(area_width / grid_width))
+    new_grid_width.insert(0, root_grid)
     for i in range(len(segment_length)):
         # grid = (segment_length[i] - grid_width) / (int(segment_length[i] / grid_width))
         if int(segment_length[i] / grid_width) + 1 >= 2:
@@ -534,16 +534,12 @@ def generate_waypoints(vertices):
             starting_points.append(p1)
         else:
             starting_points.append(p2)
-    if starting_points[0][1] > y_root_coord:
-        flag = True
-        starting_points.sort(key=lambda x: x[1])
-    else: 
-        flag = False
-        starting_points.sort(key=lambda x: x[1], reverse=True) # sort by y coordinat
     print("Starting points: ", starting_points)
     points = []
+    segment_length.insert(0, longest_edge_length)
     for i in range(m_): 
-        for j in range(m):
+        for j in range(int(segment_length[i]/grid_width) + 1):
+        # for j in range(m):
             # if 0 == i and 0 == j:
             #     x = x_root_coord + grid_width / 2
             #     y = y_root_coord + grid_height / 2
