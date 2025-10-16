@@ -415,8 +415,9 @@ def split_grids(rotated_area, angle, midpoint, min_lat, min_lon, grid_size, n_ar
             points = [tuple(point) for point in hull_vertices]
 
             #HaoNV35 Start.
-            grid_points = generate_waypoints(points)
-            # grid_points = generate_waypoints(points)
+            grid_size = calculate_grid_size()
+            # grid_points = generate_grid(points, int(distance))
+            grid_points = generate_waypoints(points, grid_size[i])
             #HaoNV35 End.
 
             areas_dot.append(grid_points)
@@ -444,6 +445,7 @@ def split_grids(rotated_area, angle, midpoint, min_lat, min_lon, grid_size, n_ar
                 per_GPS_list.append(new)
             grid_GPS.append(per_GPS_list)
 
+        print("Grid GPS: ", grid_GPS)
         return grid_GPS
 
 
@@ -473,7 +475,7 @@ def generate_grid(vertices, spacing_m):
 
     return points
 
-def generate_waypoints(vertices):
+def generate_waypoints(vertices, grid_size):
     print("===================================================================================")
     min_x = min(v[0] for v in vertices)
     max_x = max(v[0] for v in vertices)
@@ -491,9 +493,8 @@ def generate_waypoints(vertices):
         x_root_coord = coord[1][0]
         y_root_coord = coord[1][1]
 
-    grid_size = calculate_grid_size()
-    grid_width = grid_size[0][0]
-    grid_height = grid_size[0][1]
+    grid_width = grid_size[0]
+    grid_height = grid_size[1]
     print("Grid width, height: ", grid_width, grid_height)
 
     # longest_edge_length, longest_edge_coord = find_longest_edge(vertices)
@@ -564,12 +565,29 @@ def generate_waypoints(vertices):
             # if ray_casting_point_in_polygon((x, y), vertices):
             points.append((x, y))
     print("Generated points: ", points)
-    return points
+    index = 1
+    final_list = []
+    for i in range(m_):
+        sub_list = []
+        sub_list.append(points[index-1])
+        while index != len(points) and points[index][1] == points[index-1][1]:
+            sub_list.append(points[index])
+            index += 1
+        print("Sub list: ", sub_list)
+        index += 1
+        if i % 2 != 0:
+            sub_list.reverse()
+        final_list.append(sub_list)
+    final_final_list = []
+    for i in range(m_):
+        final_final_list = final_final_list + final_list[i]
+    print("Final list: ", final_final_list)
+    return final_final_list
 
 #HaoNV35 Start.
 def calculate_grid_size():
     uav_num = 5
-    h_fov = (90, 100, 100, 100, 100)
+    h_fov = (90, 90, 100, 100, 100)
     v_fov = (52, 52, 52, 52, 52)
     uav_alt = (10, 10, 10, 10, 10)
     h_overleap = 0

@@ -266,9 +266,6 @@ def heron_formula(a, b, c):
 
 
 # ==================================================================================================
-# Old code
-# Tu doan nay tro di la code cua mot thang ngu lol nao do code ngu vc, d biet sua the nao
-# ==================================================================================================
 def find_longest_edge2(cartesian_coords):
     """
     Find the vertices that form the longest edge in a polygon given its vertices in Cartesian coordinates.
@@ -895,6 +892,11 @@ def find_path(points, point_A):
     list_A.extend(path_list_2)  # nối 2 phần
 
     return list_A
+
+#HaoNV35 add 13/10/2025.
+def find_new_path(points, point_a):
+    points.insert(0, point_a) 
+    return points
 
 def calculate_grid_size_from_hfov_and_vfov(h_fov, v_fov, uav_alt, h_overlap, v_overlap):
     grid_width = 2 * uav_alt * math.tan(math.radians(h_fov / 2)) - h_overlap
