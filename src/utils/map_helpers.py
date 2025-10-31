@@ -462,8 +462,6 @@ def generate_grid(vertices, spacing_m):
     max_x = max(v[0] for v in vertices)
     min_y = min(v[1] for v in vertices)
     max_y = max(v[1] for v in vertices)
-    #HaoN35 Start.
-    # print(min_x, max_x, min_y, max_y)
 
     points = []
     for i in range(int((max_y - min_y) / spacing_m) + 1):
@@ -475,54 +473,44 @@ def generate_grid(vertices, spacing_m):
 
     return points
 
-def generate_waypoints(vertices, grid_size):
+def generate_waypoints(area_vertices, grid_size):
     print("===================================================================================")
-    min_x = min(v[0] for v in vertices)
-    max_x = max(v[0] for v in vertices)
-    min_y = min(v[1] for v in vertices)
-    max_y = max(v[1] for v in vertices)
-    print("vertices: ", vertices)
-    print("min_x, max_x, min_y, max_y: ", min_x, max_x, min_y, max_y)
-
-    longest_edge_length, coord = find_longest_edge(vertices)
-    print("Coord, longest_edge_length: ", coord, longest_edge_length)
-    if coord[0][0] < coord[1][0]:
-        x_root_coord = coord[0][0]
-        y_root_coord = coord[0][1]
-    else:
-        x_root_coord = coord[1][0]
-        y_root_coord = coord[1][1]
-
-    grid_width = grid_size[0]
-    grid_height = grid_size[1]
-    print("Grid width, height: ", grid_width, grid_height)
-
-    # longest_edge_length, longest_edge_coord = find_longest_edge(vertices)
-    area_width = max_x - min_x
-    area_height = max_y - min_y
+    area_min_x = min(v[0] for v in area_vertices)
+    area_max_x = max(v[0] for v in area_vertices)
+    area_min_y = min(v[1] for v in area_vertices)
+    area_max_y = max(v[1] for v in area_vertices)
+    print("vertices: ", area_vertices)
+    print("min_x, max_x, min_y, max_y: ", area_min_x, area_max_x, area_min_y, area_max_y)
+    area_width = area_max_x - area_min_x
+    area_height = area_max_y - area_min_y
     print("Area width, height: ", area_width, area_height)
 
-    m = int(area_width/grid_width) + 1
-    m_ = int(area_height/grid_height) + 1
-    print("m, m_: ", m, m_)
+    default_grid_width = grid_size[0]
+    default_grid_height = grid_size[1]
+    print("Grid width, height: ", default_grid_width, default_grid_height)
 
-    if m_ > 1:
-        new_grid_height = area_height / m_
+    longest_edge_length, longest_edge_coord = find_longest_edge(area_vertices)
+    print("Coord, longest_edge_length: ", longest_edge_coord, longest_edge_length)
+    if longest_edge_coord[0][0] < longest_edge_coord[1][0]:
+        x_root_coord = longest_edge_coord[0][0]
+        y_root_coord = longest_edge_coord[0][1]
     else:
-        new_grid_height = area_height
+        x_root_coord = longest_edge_coord[1][0] 
+        y_root_coord = longest_edge_coord[1][1]
 
-    intersection_points, segment_length, flag = find_parallel_polygon_intersection(vertices, new_grid_height, m_)
+    number_of_rows = int(area_height/default_grid_height) + 1
+    print("Number of rows: ", number_of_rows)
+    new_grid_height = area_height / number_of_rows
+
+    intersection_points, segment_length, flag = find_parallel_polygon_intersection(area_vertices, new_grid_height, number_of_rows)
 
     new_grid_width = []
-    root_grid = (longest_edge_length - grid_width) / (int(area_width / grid_width))
+    root_grid = (longest_edge_length - default_grid_width) / (int(area_width / default_grid_width))
     new_grid_width.insert(0, root_grid)
     for i in range(len(segment_length)):
-        # grid = (segment_length[i] - grid_width) / (int(segment_length[i] / grid_width))
-        if int(segment_length[i] / grid_width) + 1 >= 2:
-            grid = (segment_length[i] - grid_width) / (int(segment_length[i] / grid_width))
-        else:
-            grid = segment_length[i]
-        new_grid_width.append(grid)
+        row_grid_width = (segment_length[i] - default_grid_width) / (int(segment_length[i] / default_grid_width))
+        new_grid_width.append(row_grid_width)
+    #Write a new function here
 
     print("New grid width: ", new_grid_width)
     print("New grid height: ", new_grid_height)
@@ -536,38 +524,33 @@ def generate_waypoints(vertices, grid_size):
         else:
             starting_points.append(p2)
     print("Starting points: ", starting_points)
+    #Write a new function here
+
     points = []
     segment_length.insert(0, longest_edge_length)
-    for i in range(m_): 
-        for j in range(int(segment_length[i]/grid_width) + 1):
-        # for j in range(m):
-            # if 0 == i and 0 == j:
-            #     x = x_root_coord + grid_width / 2
-            #     y = y_root_coord + grid_height / 2
-            #     if ray_casting_point_in_polygon((x, y), vertices):
-            #         points.append((x, y))
-                # print(points)
-
+    for i in range(number_of_rows): 
+        for j in range(int(segment_length[i]/default_grid_width) + 1):
             if flag:
                 if 0 == i:
-                    x = x_root_coord + grid_width / 2 + (j * new_grid_width[i])
+                    x = x_root_coord + default_grid_width / 2 + (j * new_grid_width[i])
                     y = y_root_coord + new_grid_height / 2 
                 else:
-                    x = starting_points[i-1][0] + grid_width/2 + (j * new_grid_width[i])
+                    x = starting_points[i-1][0] + default_grid_width/2 + (j * new_grid_width[i])
                     y = starting_points[i-1][1] + new_grid_height/2
             else:
                 if 0 == i:
-                    x = x_root_coord + grid_width / 2 + (j * new_grid_width[i])
+                    x = x_root_coord + default_grid_width / 2 + (j * new_grid_width[i])
                     y = y_root_coord - new_grid_height / 2 
                 else:
-                    x = starting_points[i-1][0] + grid_width/2 + (j * new_grid_width[i])
+                    x = starting_points[i-1][0] + default_grid_width/2 + (j * new_grid_width[i])
                     y = starting_points[i-1][1] - new_grid_height/2
             # if ray_casting_point_in_polygon((x, y), vertices):
             points.append((x, y))
     print("Generated points: ", points)
+
     index = 1
     final_list = []
-    for i in range(m_):
+    for i in range(number_of_rows):
         sub_list = []
         sub_list.append(points[index-1])
         while index != len(points) and points[index][1] == points[index-1][1]:
@@ -579,7 +562,7 @@ def generate_waypoints(vertices, grid_size):
             sub_list.reverse()
         final_list.append(sub_list)
     final_final_list = []
-    for i in range(m_):
+    for i in range(number_of_rows):
         final_final_list = final_final_list + final_list[i]
     print("Final list: ", final_final_list)
     return final_final_list
@@ -590,12 +573,13 @@ def calculate_grid_size():
     h_fov = (90, 90, 100, 100, 100)
     v_fov = (52, 52, 52, 52, 52)
     uav_alt = (10, 10, 10, 10, 10)
-    h_overleap = 0
-    v_overleap = 0
+    h_overlap = 0
+    v_overlap = 0
     grid_size = []  
     for i in range(uav_num): 
-        grid_width, grid_height = calculate_grid_size_from_hfov_and_vfov(h_fov[i], v_fov[i], uav_alt[i], h_overleap, v_overleap)
-        grid_size.append((grid_width, grid_height))
+        grid_width, grid_height = calculate_grid_size_from_hfov_and_vfov(h_fov[i], v_fov[i], uav_alt[i])
+        overlapped_grid_width, overlapped_grid_height = calculate_overlapped_grid_size(grid_width, grid_height, h_overlap, v_overlap)
+        grid_size.append((overlapped_grid_width, overlapped_grid_height))
     # print(grid_size)
     return grid_size
 #HaoNV35 End.

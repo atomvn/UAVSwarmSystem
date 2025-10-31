@@ -442,7 +442,7 @@ class MapEngine(QWebEngineView):
         """
         return self.runScript(f"deleteMarkerJs(key={json.dumps(key)});")
 
-    def mapMoveMarker(self, key: str, latitude: float, longitude: float) -> None:
+    def moveMarker(self, key: str, latitude: float, longitude: float) -> None:
         """
         Move a marker to new coordinates.
         

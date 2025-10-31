@@ -40,35 +40,35 @@ OVERWRITE_PARAMS = {
         "MIS_TAKEOFF_ALT": 5,    # Take-off altitude (m)
         "MPC_TKO_SPEED": 2,      # Takeoff climb rate (m/s)
         "GND_SPEED_MAX": 2,      # Maximum ground speed (m/s)
-        "CURRENT_SPEED": 1,      # Current speed during mission (m/s)
+        "CURRENT_SPEED": 3,      # Current speed during mission (m/s)
         "RTL_AFTER_MS": True,    # Return to launch after mission
     },
     2: {
         "MIS_TAKEOFF_ALT": 6,    # Take-off altitude (m)
         "MPC_TKO_SPEED": 2,      # Takeoff climb rate (m/s)
         "GND_SPEED_MAX": 2,      # Maximum ground speed (m/s)
-        "CURRENT_SPEED": 1,      # Current speed during mission (m/s)
+        "CURRENT_SPEED": 3,      # Current speed during mission (m/s)
         "RTL_AFTER_MS": True,    # Return to launch after mission
     },
     3: {
         "MIS_TAKEOFF_ALT": 7,    # Take-off altitude (m)
         "MPC_TKO_SPEED": 2,      # Takeoff climb rate (m/s)
         "GND_SPEED_MAX": 2,      # Maximum ground speed (m/s)
-        "CURRENT_SPEED": 1,      # Current speed during mission (m/s)
+        "CURRENT_SPEED": 3,      # Current speed during mission (m/s)
         "RTL_AFTER_MS": True,    # Return to launch after mission
     },
     4: {
         "MIS_TAKEOFF_ALT": 8,    # Take-off altitude (m)
         "MPC_TKO_SPEED": 2,      # Takeoff climb rate (m/s)
         "GND_SPEED_MAX": 2,      # Maximum ground speed (m/s)
-        "CURRENT_SPEED": 1,      # Current speed during mission (m/s)
+        "CURRENT_SPEED": 3,      # Current speed during mission (m/s)
         "RTL_AFTER_MS": True,    # Return to launch after mission
     },
     5: {
         "MIS_TAKEOFF_ALT": 9,    # Take-off altitude (m)
         "MPC_TKO_SPEED": 2,      # Takeoff climb rate (m/s)
         "GND_SPEED_MAX": 2,      # Maximum ground speed (m/s)
-        "CURRENT_SPEED": 1,      # Current speed during mission (m/s)
+        "CURRENT_SPEED": 3,      # Current speed during mission (m/s)
         "RTL_AFTER_MS": True,    # Return to launch after mission
     },
     6: {

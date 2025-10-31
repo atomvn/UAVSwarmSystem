@@ -1232,7 +1232,7 @@ class App(Map, StreamQtThread, Interface, QtWidgets.QWidget):
             # await self._execute_standard_mission(uav_index)
             await asyncio.gather(
                 self._execute_standard_mission(uav_index),
-                # self.uav_fn_get_position(uav_index),
+                self.uav_fn_get_position(uav_index),
             )
         
         # Handle rescue UAV mission
@@ -1269,7 +1269,7 @@ class App(Map, StreamQtThread, Interface, QtWidgets.QWidget):
             # Execute mission from plan file
             await uav_fn_do_mission(
                 drone=UAVs[uav_index],
-                mission_plan_file=f"{__current_path__}/logs/points/reduced_point{uav_index}.txt",
+                mission_plan_file=f"{__current_path__}/logs/points/points{uav_index}.txt",
             )
             
             # Update display
@@ -1781,6 +1781,7 @@ class App(Map, StreamQtThread, Interface, QtWidgets.QWidget):
                 alt_msl = round(position.absolute_altitude_m, 12)
                 latitude = round(position.latitude_deg, 12)
                 longitude = round(position.longitude_deg, 12)
+                print(f"UAV {uav_index} position: {latitude}, {longitude}, {alt_rel}, {alt_msl}")
                 
                 # Update the UAV status dictionary
                 UAVs[uav_index]["status"]["altitude_status"] = [alt_rel, alt_msl]
@@ -1793,6 +1794,7 @@ class App(Map, StreamQtThread, Interface, QtWidgets.QWidget):
                 self._update_uav_info_display(uav_index)
                 
                 # show on map
+                self.move_drone_markers(uav_index, latitude, longitude)
                 # self.show_drones(init=False)
                     
                 # Only process one position update per call, comment out if you want to make it continuous

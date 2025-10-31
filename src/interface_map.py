@@ -304,7 +304,7 @@ class Map(Interface):
             self.remove_objects(["markers"])
             self.drone_markers_dict = {}
 
-            # Process and display the grid points
+            # Process and display the path
             self.process_grid_points(grid_points)
             self.grid_enabled = True
 
@@ -349,8 +349,8 @@ class Map(Interface):
 
             if self.multi_area:
                 # Process each area separately
-                for ind, area in enumerate(grid_points):
-                    self._process_single_area(area, ind + 1, marker_options)
+                for ind, area_points in enumerate(grid_points):
+                    self._process_single_area(area_points, ind + 1, marker_options)
             else:
                 # Process single area
                 self._process_single_area(grid_points, 1, marker_options)
@@ -366,7 +366,7 @@ class Map(Interface):
     def _process_single_area(self, area_points, area_index, marker_options):
         """Process and display grid points for a single area"""
         # Find optimal path through points
-        ordered_points = find_path(area_points, self.drone_position_list[0])
+        ordered_points = find_new_path(area_points, self.drone_position_list[0])
         ordered_points = remove_duplicate_pts(ordered_points)
 
         # Check if there are too many points
@@ -947,7 +947,7 @@ class Map(Interface):
                                     "icon": DRONE_ICON_PATH,
                                     "draggable": False,
                                     "title": f"UAV {drone_id}",
-                                    "iconSize": {"width": 21, "height": 21},
+                                    "iconSize": {"width": 50, "height": 50},
                                 }
                                 
                                 # Add marker to both maps
@@ -1045,6 +1045,11 @@ class Map(Interface):
                 self.rescue_map.deleteMarker(key)
                 self.ovv_map.deleteMarker(key)
             self.drone_initial_positions = {}
+
+    #HaoNV35
+    def move_drone_markers(self, uav_index, lat, lon):
+        self.rescue_map.moveMarker(f"uav_{uav_index}", lat, lon)
+        self.ovv_map.moveMarker(f"uav_{uav_index}", lat, lon)
 
     def update_drone_positions(self):
         """

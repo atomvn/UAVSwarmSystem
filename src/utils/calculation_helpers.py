@@ -895,65 +895,66 @@ def find_path(points, point_A):
 
 #HaoNV35 add 13/10/2025.
 def find_new_path(points, point_a):
-    points.insert(0, point_a) 
     return points
 
-def calculate_grid_size_from_hfov_and_vfov(h_fov, v_fov, uav_alt, h_overlap, v_overlap):
-    grid_width = 2 * uav_alt * math.tan(math.radians(h_fov / 2)) - h_overlap
-    grid_height = 2 * uav_alt * math.tan(math.radians(v_fov / 2)) - v_overlap
+def calculate_grid_size_from_hfov_and_vfov(h_fov, v_fov, uav_alt):
+    grid_width = 2 * uav_alt * math.tan(math.radians(h_fov / 2)) 
+    grid_height = 2 * uav_alt * math.tan(math.radians(v_fov / 2)) 
     return grid_width, grid_height
 
-def find_hor_line_segment_intersection(y, p1, p2):
-    x1, y1 = p1 
-    x2, y2 = p2
+def calculate_overlapped_grid_size(grid_width, grid_height, h_overlap, v_overlap):
+    overlapped_grid_width = grid_width - h_overlap * grid_width
+    overlapped_grid_height = grid_height - v_overlap * grid_height
+    return overlapped_grid_width, overlapped_grid_height
 
+def find_line_segment_intersection(line, segment_point1, segment_point2):
+    x1, y1 = segment_point1 
+    x2, y2 = segment_point2
     if y1 == y2:
         return None
-    if(y1 <= y <= y2) or (y2 <= y <= y1):
-        t = (y - y1) / (y2 - y1)
-        if 0 <= t <= 1:
-            x = x1 + t * (x2 - x1)
-            return (x, y)
+    if(y1 <= line <= y2) or (y2 <= line <= y1):
+        ratio = (line - y1) / (y2 - y1)
+        if 0 <= ratio <= 1:
+            x_line = x1 + ratio * (x2 - x1)
+            return (x_line, line)
     return None
 
-def find_parallel_polygon_intersection(vertices, spacing, number_of_lines):
-    longest_edge_length, longest_edge = find_longest_edge(vertices)
-    x1, y1 = longest_edge[0]
-    x2, y2 = longest_edge[1]
-
-    min_x = min(v[0] for v in vertices)
-    max_x = max(v[0] for v in vertices)
-    min_y = min(v[1] for v in vertices)
-    max_y = max(v[1] for v in vertices)
+def find_parallel_polygon_intersection(area_vertices, spacing, number_of_lines):
+    longest_edge_length, longest_edge_endpoints = find_longest_edge(area_vertices)
+    x1, y1 = longest_edge_endpoints[0]
+    x2, y2 = longest_edge_endpoints[1]
+    area_min_y = min(v[1] for v in area_vertices)
+    area_max_y = max(v[1] for v in area_vertices)
 
     intersection_points = []
     for i in range(-number_of_lines, number_of_lines + 1):
         if i == 0:
             continue
-        y = y1 + i * spacing
-        if min_y < y < max_y:
-            for j in range(len(vertices)):
-                x3, y3 = vertices[j]
-                x4, y4 = vertices[(j+1) % len(vertices)]
-                intersection = find_hor_line_segment_intersection(y, (x3, y3), (x4, y4))
+        line = y1 + i * spacing
+        if area_min_y < line < area_max_y:
+            for j in range(len(area_vertices)):
+                x3, y3 = area_vertices[j]
+                x4, y4 = area_vertices[(j+1) % len(area_vertices)]
+                intersection = find_line_segment_intersection(line, (x3, y3), (x4, y4))
                 if intersection:
                     intersection_points.append(intersection)
+    print("Number of intersection points:", len(intersection_points))
+
     if intersection_points[0][1] > y1:
-        flag = True
+        up = True
         intersection_points.sort(key=lambda x: x[1])
     else: 
-        flag = False
+        up = False
         intersection_points.sort(key=lambda x: x[1], reverse=True) # sort by y coordinat
-    print("Number of intersection points:", len(intersection_points))
     print("Intersection points:", intersection_points)
+
     segment_length = []
     for i in range(1, len(intersection_points), 2):
-        p1 = intersection_points[i]
-        p2 = intersection_points[i-1]
-        length = np.linalg.norm(np.array(p1) - np.array(p2))
+        point1 = intersection_points[i]
+        point2 = intersection_points[i-1]
+        length = np.linalg.norm(np.array(point1) - np.array(point2))
         print("Length:", length)
         if length > 0: 
             segment_length.append(length)
     print("Segment lengths:", segment_length)
-    return intersection_points, segment_length, flag
-
+    return intersection_points, segment_length, up

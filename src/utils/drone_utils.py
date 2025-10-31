@@ -53,21 +53,55 @@ def calculate_distance(lat1, lon1, lat2, lon2) -> float:
     return distance
 
 
-async def print_mission_progress(drone) -> None:
-    """
-    Monitor and print the mission progress of a UAV.
+# async def print_mission_progress(drone) -> None:
+#     """
+#     Monitor and print the mission progress of a UAV.
     
-    Args:
-        drone (dict): A dictionary containing the UAV system with an 'ID' key
+#     Args:
+#         drone (dict): A dictionary containing the UAV system with an 'ID' key
     
-    Note:
-        This is an asynchronous generator function that should be run as a background task
-    """
-    async for mission_progress in drone["system"].mission.mission_progress():
+#     Note:
+#         This is an asynchronous generator function that should be run as a background task
+#     """
+#     async for mission_progress in drone["system"].mission.mission_progress():
+#         print(
+#             f"Mission UAV-{drone['ID']} progress: "
+#             f"{mission_progress.current}/{mission_progress.total}"
+#         )
+#     async for position in drone["system"].telemetry.position():
+#         current_lat = position.latitude_deg
+#         current_lon = position.longitude_deg
+#         current_alt = position.absolute_altitude_m             
+#         print(f"Position: Lat={current_lat:.6f}, "
+#             f"\nLon={current_lon:.6f}, "
+#             f"\nAlt={current_alt:.2f}m")
+ # ---------- hàm con ----------
+async def _track_mission(drone):
+    async for mp in drone["system"].mission.mission_progress():
         print(
             f"Mission UAV-{drone['ID']} progress: "
-            f"{mission_progress.current}/{mission_progress.total}"
+            f"{mp.current}/{mp.total}"
         )
+        await asyncio.sleep(4)   # nhường cho task khác
+
+async def _track_position(drone):
+    async for pos in drone["system"].telemetry.position():
+        print(
+            f"UAV-{drone['ID']} position: "
+            f"Lat={pos.latitude_deg:.6f}, "
+            f"Lon={pos.longitude_deg:.6f}, "
+            f"Alt={pos.absolute_altitude_m:.2f}m"
+        )
+        await asyncio.sleep(4)
+
+# ---------- hàm chính ----------
+async def print_mission_progress(drone):
+    # Tạo 2 task đồng thời
+    mission_task = asyncio.ensure_future(_track_mission(drone))
+    position_task = asyncio.ensure_future(_track_position(drone))
+
+    # (Tuỳ chọn) chờ một trong hai kết thúc, hoặc chờ cả hai
+    await asyncio.gather(mission_task, position_task)       
 
 
 # --------------------- PARAMETER MANAGEMENT FUNCTIONS ---------------------

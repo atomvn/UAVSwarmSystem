@@ -253,6 +253,14 @@ function moveMarkerJs(key, latitude, longitude) {
     marker = markers[key];
     var newLatLng = new L.LatLng(latitude, longitude);
     marker.setLatLng(newLatLng);
+
+    marker.setTooltipContent(`
+        <div style="text-align:center;">
+            <b>UAV-${key}</b><br>
+            Lat: ${latitude.toFixed(6)}<br>
+            Lng: ${longitude.toFixed(6)}
+        </div>
+    `);
 }
 
 function posMarkerJs(key) {
