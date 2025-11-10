@@ -145,6 +145,19 @@ def find_longest_edge(points):
 
     return max_length, longest_edge
 
+def find_longest_edge_lat_lon(points):
+    """Find the longest edge of a quadrilateral."""
+    max_length = 0
+    longest_edge = None
+
+    for i in range(len(points)):
+        p1, p2 = points[i], points[(i + 1) % len(points)]
+        length = distance_between_points(p1, p2)
+        if length > max_length:
+            max_length = length
+            longest_edge = (p1, p2)
+
+    return max_length, longest_edge
 
 def find_segment_points(edge, N=2):
     """Find N equal segment points on an edge."""
@@ -894,8 +907,43 @@ def find_path(points, point_A):
     return list_A
 
 #HaoNV35 add 13/10/2025.
-def find_new_path(points, point_a):
-    return points
+def find_zigzag_path(points, uav_init_point):
+    # points_on_row
+    i = 1
+    j = 0
+    n = 100
+    sub_list = [[] for i in range(n)]
+    sub_list[0].append(points[0])
+    while i < len(points) - 1:
+        if point_on_line(points[i-1], points[i], points[i+1]):
+            sub_list[j].append(points[i])
+            i += 1
+        else:
+            sub_list[j].append(points[i])
+            j += 1
+            sub_list[j].append(points[i+1])
+            i += 2
+    sub_list[j].append(points[-1])
+
+    points_on_row = [[] for i in range(j+1)] 
+    for i in range(j+1):
+        points_on_row[i] = sub_list[i]
+        print(f"points_on_row{i+1}: ", points_on_row[i])
+
+    start_distance = distance_between_points(uav_init_point, points_on_row[0][0])
+    end_distance = distance_between_points(uav_init_point, points_on_row[0][-1])
+    if start_distance > end_distance:
+        for i in range(len(points_on_row)):
+            if i % 2 == 0:
+                points_on_row[i].reverse()
+    else:
+        for i in range(len(points_on_row)):
+            if i % 2 != 0:
+                points_on_row[i].reverse()
+    final_path = []
+    for i in range(len(points_on_row)):
+        final_path.extend(points_on_row[i])
+    return final_path
 
 def calculate_grid_size_from_hfov_and_vfov(h_fov, v_fov, uav_alt):
     grid_width = 2 * uav_alt * math.tan(math.radians(h_fov / 2)) 
@@ -939,13 +987,12 @@ def find_parallel_polygon_intersection(area_vertices, spacing, number_of_lines):
                 if intersection:
                     intersection_points.append(intersection)
     print("Number of intersection points:", len(intersection_points))
-
     if intersection_points[0][1] > y1:
-        up = True
+        is_up = True
         intersection_points.sort(key=lambda x: x[1])
     else: 
-        up = False
-        intersection_points.sort(key=lambda x: x[1], reverse=True) # sort by y coordinat
+        is_up = False
+        intersection_points.sort(key=lambda x: x[1], reverse=True) # sort by y coordinate
     print("Intersection points:", intersection_points)
 
     segment_length = []
@@ -957,4 +1004,4 @@ def find_parallel_polygon_intersection(area_vertices, spacing, number_of_lines):
         if length > 0: 
             segment_length.append(length)
     print("Segment lengths:", segment_length)
-    return intersection_points, segment_length, up
+    return intersection_points, segment_length, is_up
