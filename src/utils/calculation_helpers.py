@@ -876,6 +876,15 @@ def sort_polygon_vertices(vertices):
 
     return sorted_vertices
 
+def calculate_polygon_area_from_vertices(sorted_vertices):
+    #Shoelace formula
+    area = 0
+    for i in range(len(sorted_vertices)):
+        x1, y1 = sorted_vertices[i]
+        x2, y2 = sorted_vertices[(i + 1) % len(sorted_vertices)]
+        area += x1*y2 - x2*y1
+    area = abs(area) / 2
+    return area
 
 def find_path(points, point_A):
     # TÌM CẠNH CỦA ĐA GIÁC (BƯỚC NÀY TÌM ĐƯỢC GÓC CỦA ĐA GIÁC)
@@ -950,10 +959,26 @@ def calculate_grid_size_from_hfov_and_vfov(h_fov, v_fov, uav_alt):
     grid_height = 2 * uav_alt * math.tan(math.radians(v_fov / 2)) 
     return grid_width, grid_height
 
-def calculate_overlapped_grid_size(grid_width, grid_height, h_overlap, v_overlap):
+def calculate_overlapped_grid_size(grid_width, grid_length, h_overlap, v_overlap):
     overlapped_grid_width = grid_width - h_overlap * grid_width
-    overlapped_grid_height = grid_height - v_overlap * grid_height
-    return overlapped_grid_width, overlapped_grid_height
+    overlapped_grid_length = grid_length - v_overlap * grid_length
+    return overlapped_grid_width, overlapped_grid_length
+
+def calculate_grid_size():
+    uav_num = 5
+    h_fov = (100, 100, 100, 100, 100)
+    v_fov = (52, 52, 52, 52, 52)
+    uav_alt = (10, 10, 10, 10, 10)
+    h_overlap = 0
+    v_overlap = 0
+    grid_size = []  
+    for i in range(uav_num): 
+        grid_width, grid_height = calculate_grid_size_from_hfov_and_vfov(h_fov[i], v_fov[i], uav_alt[i])
+        overlapped_grid_width, overlapped_grid_height = calculate_overlapped_grid_size(grid_width, grid_height, h_overlap, v_overlap)
+        grid_size.append((overlapped_grid_width, overlapped_grid_height))
+    # print(grid_size)
+    return grid_size
+#HaoNV35 End.
 
 def find_line_segment_intersection(line, segment_point1, segment_point2):
     x1, y1 = segment_point1 
@@ -993,15 +1018,100 @@ def find_parallel_polygon_intersection(area_vertices, spacing, number_of_lines):
     else: 
         is_up = False
         intersection_points.sort(key=lambda x: x[1], reverse=True) # sort by y coordinate
-    print("Intersection points:", intersection_points)
+    # print("Intersection points:", intersection_points)
 
     segment_length = []
     for i in range(1, len(intersection_points), 2):
         point1 = intersection_points[i]
         point2 = intersection_points[i-1]
         length = np.linalg.norm(np.array(point1) - np.array(point2))
-        print("Length:", length)
+        # print("Length:", length)
         if length > 0: 
             segment_length.append(length)
-    print("Segment lengths:", segment_length)
+    # print("Segment lengths:", segment_length)
     return intersection_points, segment_length, is_up
+
+
+def split_polygon_into_equal_areas(low, high, perp_slope, polygon, longest_edge_point, number_of_parts):
+    area_sorted_vertices = sort_polygon_vertices(polygon)
+    polygon_area = calculate_polygon_area_from_vertices(area_sorted_vertices)
+    print(f"POLYGON AREA: {polygon_area}")
+    target_area = polygon_area / number_of_parts
+    per_points = []
+    parallel_line_polygon_intersections = []
+    area_below = []
+    under_edge = longest_edge_point
+    for i in range(number_of_parts-1):
+        area, lowest, intersections = find_area_based_polygon_line_cut(low, high, perp_slope, polygon, under_edge, target_area)
+        per_points.append(lowest)
+        parallel_line_polygon_intersections.extend(intersections)
+        area_below.append(area)
+        under_edge = intersections
+        low = lowest
+    print(f"AREA BELOW: {area_below}")
+    print(f"Perpendicular Points: {per_points}")
+    print(f"PARALLEL LINE POLYGON INTERSECTIONS: {parallel_line_polygon_intersections}")
+    return per_points, parallel_line_polygon_intersections
+
+
+
+def find_area_based_polygon_line_cut(low, high, perp_slope, polygon, under_edge, target_area):
+    max_iter = 100
+    epsilon = 50
+    for _ in range(max_iter):
+        # Find binary search midpoint
+        mid = ((low[0] + high[0]) / 2, (low[1] + high[1]) / 2)
+        # print(f"MID: {mid}")
+        # find line equation cutting binary search mid point
+        slope, intercept = perpendicular_line_equation(mid, perp_slope)
+        # find intersections between line and polygon
+        intersections = perpendicular_line_intersect_polygon(slope, intercept, polygon)    
+        # print(f"INTERSECTIONS: {intersections}")
+        # calculate area formed by 2 intesections and under edge
+        sorted_vertices = sort_polygon_vertices([intersections[0], intersections[1], under_edge[0], under_edge[1]])
+        area_below = calculate_polygon_area_from_vertices(sorted_vertices) 
+        if abs(area_below - target_area) <= epsilon:
+            return area_below, mid, intersections
+        if area_below > target_area:
+            high = mid
+        else:
+            low = mid
+    return None
+
+def calculate_distance_from_point_to_line(point, line_start, line_end):
+    Ax, Ay = point
+    Bx, By = line_start
+    Cx, Cy = line_end
+
+    BCx = Cx - Bx
+    BCy = Cy - By
+    BAx = Ax - Bx
+    BAy = Ay - By
+
+    Bc_len_2 = BCx * BCx + BCy * BCy
+
+    if Bc_len_2 == 0:
+        return math.dist(pont, line_start)
+
+    t = (BAx * BCx + BAy * BCy) / Bc_len_2
+
+    Hx = Bx + t * BCx
+    Hy = By + t * BCy
+
+    return (Hx, Hy), math.dist(point, (Hx, Hy))
+
+def calculate_area_height(polygon):
+    _, longest_edge_point = find_longest_edge(polygon)
+    farthest_point = []
+    foot_of_polygon_altitude = []
+    polygon_height = 0
+    for point in polygon:
+        if point == longest_edge_point[0] and point == longest_edge_point[1]:
+            continue
+        h, dis = calculate_distance_from_point_to_line(point, longest_edge_point[0], longest_edge_point[1])
+        if dis > polygon_height:
+            polygon_height = dis
+            farthest_point = point
+            foot_of_polygon_altitude = h
+
+    return foot_of_polygon_altitude, farthest_point, polygon_height

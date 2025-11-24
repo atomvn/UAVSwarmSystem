@@ -45,7 +45,7 @@ def area_of_polygon(vertices):
     }
 
 
-def split_polygon_into_areas(vertices, number_of_parts):
+def split_polygon_into_areas_old_old(vertices, number_of_parts):
     """Split a polygon defined by the given vertices into a number of parts.
 
     Args:
@@ -150,64 +150,40 @@ def split_polygon_into_areas_old(vertices, number_of_parts):
     min_lon = min(positions, key=lambda x: x[1])[1]
     # Convert the geographic positions to Cartesian coordinates
     cartesian_coordinates = convert_to_cartesian(positions)
-    # print("Cartesian Coordinates:")
-    # for coord in cartesian_coordinates:
-    #     print(coord)
 
     # Find the largest edge
     _, longest_edge_point = find_longest_edge(cartesian_coordinates)
-    # print(f"\nEdge: {longest}")
-    # for coord in longest_edge_point:
-    #     print(coord)
 
     # Find midpont of largest edge
     midpoint = find_midpoint(longest_edge_point[0], longest_edge_point[1])
-    # print(f"\nMidpoint: {midpoint}")
     new = calculate_new_lat_lon(min_lat, min_lon, midpoint[1], midpoint[0])
-    # print(f"\nGPS Midpoint: {new}")
 
     # Find line equation of largest edge (to figure out the slope of it)
     slope, intercept = line_equation_from_points(longest_edge_point[0], longest_edge_point[1])
-    # print(f"\nSlope: {slope}")
     angle = angle_with_x_axis(slope)
-    # print(f"\nAngle: {angle}")
-
-    new_point = rotate_and_shift_point(
-        midpoint[0],
-        midpoint[1],
-        (-angle),
-        midpoint[0],
-        midpoint[1],
-        (-midpoint[0]),
-        (-midpoint[1]),
-    )
-    # print(f"ROTATED MIDPOINT{new_point}")
 
     # Find the perpendicular's line equation (perpendicular of largest edge)
     perp_slope, perp_intercept = perpendicular_line_equation(midpoint, slope)
-    # print(f"\nPerp_slope: {perp_slope},Perp_intercep: {perp_intercept}")
 
     # Find the other intersection of the perpendicular with the polygon
     intersect_point = does_line_intersect_polygon(
         midpoint, perp_slope, perp_intercept, cartesian_coordinates
     )
-    # print(f"\nIntersect: {intersect_point[0]},{intersect_point[1]}")
     new = calculate_new_lat_lon(min_lat, min_lon, intersect_point[1], intersect_point[0])
-    # print(f"\nGPS Intersect: {new}")
 
     # ---------------------------------
 
     # ---------------------------------
     # Divide the perpendicular into equal parts
+    # Divide areas need to modify here
     perpendicular_points = divide_line_into_segments(
         midpoint[0], midpoint[1], intersect_point[0], intersect_point[1], number_of_part
     )
-    # print(f"\nPerpendicular Points: {perpendicular_points}")
+
     per_GPS_list = []
     for point in perpendicular_points:
         new = calculate_new_lat_lon(min_lat, min_lon, point[1], point[0])
         per_GPS_list.append(new)
-        # print(f"{point}")
 
     # Find the divide point on the polygon edge
     div_GPS_list = []
@@ -215,7 +191,6 @@ def split_polygon_into_areas_old(vertices, number_of_parts):
     for point in div_points:
         new = calculate_new_lat_lon(min_lat, min_lon, point[1], point[0])
         div_GPS_list.append(new)
-        # print(f"{new}")
 
     # Rotate and shift the coordinate
     rotated_div_points = []
@@ -313,6 +288,118 @@ def split_polygon_into_areas_old(vertices, number_of_parts):
 
     return final_area, rotated_area, angle, midpoint, min_lat, min_lon
 
+def split_polygon_into_areas(vertices, number_of_parts):
+    #Split a polygon defined by the given vertices into a number of area-equal parts.
+
+    # global angle, midpoint, min_lat, min_lon
+    positions = vertices
+    number_of_part = number_of_parts
+    min_lat = min(positions, key=lambda x: x[0])[0]
+    min_lon = min(positions, key=lambda x: x[1])[1]
+
+    # Convert the geographic positions to Cartesian coordinates
+    cartesian_coordinates = convert_to_cartesian(positions)
+
+    # Find the largest edge
+    _, longest_edge_point = find_longest_edge(cartesian_coordinates)
+
+    foot_of_polygon_altitude, farthest_point, polygon_height= calculate_area_height(cartesian_coordinates)
+    # print(f"\nFarthest Point: {farthest_point}")
+
+    # Find midpont of largest edge
+    midpoint = find_midpoint(longest_edge_point[0], longest_edge_point[1])
+    # print(f"\nMidpoint: {midpoint}")
+
+    # Find line equation of largest edge (to figure out the slope of it)
+    slope, intercept = line_equation_from_points(longest_edge_point[0], longest_edge_point[1])
+    # print(f"\nSlope: {slope}")
+    angle = angle_with_x_axis(slope)
+    # print(f"\nAngle: {angle}")
+
+    # Find the perpendicular's line equation (perpendicular of largest edge)
+    perp_slope, perp_intercept = perpendicular_line_equation(midpoint, slope)
+    # print(f"\nPerp_slope: {perp_slope},Perp_intercep: {perp_intercept}")
+
+    per_points, parallel_line_polygon_intersections = split_polygon_into_equal_areas(foot_of_polygon_altitude, farthest_point, perp_slope, cartesian_coordinates, longest_edge_point, number_of_part)
+    # print(f"\nPerpendicular Points: {per_points}\n")
+
+    per_points_lat_lon = []
+    for point in per_points:
+        new = calculate_new_lat_lon(min_lat, min_lon, point[1], point[0])
+        per_points_lat_lon.append(new)
+
+    rotated_per_points = []
+    for point in per_points:
+        new_point = rotate_and_shift_point(
+            point[0], point[1], (-angle), midpoint[0], midpoint[1], (-midpoint[0]), (-midpoint[1])
+        )
+        rotated_per_points.append(new_point)
+
+    parralel_line_polygon_intersections_lat_lon = []
+    for point in parallel_line_polygon_intersections:
+        new = calculate_new_lat_lon(min_lat, min_lon, point[1], point[0])
+        parralel_line_polygon_intersections_lat_lon.append(new)
+
+    rotated_parralel_line_polygon_intersections = []
+    for point in parallel_line_polygon_intersections:
+        new_point = rotate_and_shift_point(
+            point[0], point[1], (-angle), midpoint[0], midpoint[1], (-midpoint[0]), (-midpoint[1])
+        )
+        rotated_parralel_line_polygon_intersections.append(new_point)
+
+    rotated_cartesian_coordinates = []
+    for point in cartesian_coordinates:
+        new_point = rotate_and_shift_point(
+            point[0], point[1], (-angle), midpoint[0], midpoint[1], (-midpoint[0]), (-midpoint[1])
+        )
+        rotated_cartesian_coordinates.append(new_point)
+
+    rotated_polygon = []
+    # Points lie on polygon egde = vertices + divide points
+    rotated_polygon = rotated_parralel_line_polygon_intersections + rotated_cartesian_coordinates
+    # print(f"ROTATED_POLYGON: {rotated_polygon}")
+    # Separate the point into different parts
+    rotated_area = split_area(rotated_polygon, rotated_per_points)
+    # print(f"ROTATED_AREA: {rotated_area}")
+    final_area = []
+
+    for i in range(len(rotated_area)):
+        area = rotated_area[i]
+        unrotated_area = []
+        # print(f"{area}")
+        for point in area:
+            # convert back in previous coordinate
+            new_point = revert_rotate_and_shift_point(
+                point[0],
+                point[1],
+                (-angle),
+                midpoint[0],
+                midpoint[1],
+                (-midpoint[0]),
+                (-midpoint[1]),
+                clockwise=True,
+            )
+            unrotated_area.append(new_point)
+        per_GPS_list = []
+        for point in unrotated_area:
+            new = calculate_new_lat_lon(min_lat, min_lon, point[1], point[0])
+            per_GPS_list.append(new)
+            # print(f"{new}")
+        # Convert the list of positions to a NumPy array
+
+        points = np.array(per_GPS_list)
+
+        # Calculate the convex hull
+        hull = ConvexHull(points)
+
+        # Extract the vertices of the convex hull
+        hull_vertices = points[hull.vertices]
+
+        # Convert the vertices back to a list of tuples
+        points = [tuple(point) for point in hull_vertices]
+        final_area.append(points)
+
+    return final_area, rotated_area, angle, midpoint, min_lat, min_lon
 
 def split_grids(rotated_area, angle, midpoint, min_lat, min_lon, grid_size, n_areas):
 
@@ -444,7 +531,7 @@ def split_grids(rotated_area, angle, midpoint, min_lat, min_lon, grid_size, n_ar
                 per_GPS_list.append(new)
             grid_GPS.append(per_GPS_list)
 
-        print("Grid GPS: ", grid_GPS)
+        # print("Grid GPS: ", grid_GPS)
         return grid_GPS
 
 
@@ -478,21 +565,21 @@ def generate_waypoints(area_vertices, grid_size, i):
     area_max_x = max(v[0] for v in area_vertices)
     area_min_y = min(v[1] for v in area_vertices)
     area_max_y = max(v[1] for v in area_vertices)
-    print("vertices: ", area_vertices)
-    print("min_x, max_x, min_y, max_y: ", area_min_x, area_max_x, area_min_y, area_max_y)
+    # print("vertices: ", area_vertices)
+    # print("min_x, max_x, min_y, max_y: ", area_min_x, area_max_x, area_min_y, area_max_y)
     area_width = area_max_x - area_min_x
     area_height = area_max_y - area_min_y
-    print("Area width, height: ", area_width, area_height)
+    # print("area width, height: ", area_width, area_height)
 
     default_grid_width = grid_size[0]
     default_grid_height = grid_size[1]
-    print("Grid width, height: ", default_grid_width, default_grid_height)
+    # print("grid width, height: ", default_grid_width, default_grid_height)
 
     number_of_rows = int(area_height/default_grid_height) + 1
-    print("Number of rows: ", number_of_rows)
+    print("number of rows: ", number_of_rows)
 
     longest_edge_length, longest_edge_coord = find_longest_edge(area_vertices)
-    print("Coord, longest_edge_length: ", longest_edge_coord, longest_edge_length)
+    # print("coord, longest_edge_length: ", longest_edge_coord, longest_edge_length)
     if longest_edge_coord[0][0] < longest_edge_coord[1][0]:
         x_root_coord = longest_edge_coord[0][0]
         y_root_coord = longest_edge_coord[0][1]
@@ -521,12 +608,10 @@ def generate_waypoints(area_vertices, grid_size, i):
             starting_points.append(p1)
         else:
             starting_points.append(p2)
-    print("Starting points: ", starting_points)
-    #Write a new function here
-
-
-    print("New grid width: ", new_grid_width)
-    print("New grid height: ", new_grid_height)
+    print("starting points: ", starting_points)
+    #write a new function here
+    print("new grid width: ", new_grid_width)
+    print("new grid height: ", new_grid_height)
 
     points = []
     segment_length.insert(0, longest_edge_length)
@@ -546,29 +631,11 @@ def generate_waypoints(area_vertices, grid_size, i):
                 else:
                     x = starting_points[i-1][0] + default_grid_width/2 + (j * new_grid_width[i])
                     y = starting_points[i-1][1] - new_grid_height/2
-            # if ray_casting_point_in_polygon((x, y), vertices):
             points.append((x, y))
-    print("Generated points: ", points)
+    # print("generated points: ", points)
     return points
 
-
-
 #HaoNV35 Start.
-def calculate_grid_size():
-    uav_num = 5
-    h_fov = (90, 90, 100, 100, 100)
-    v_fov = (52, 52, 52, 52, 52)
-    uav_alt = (10, 10, 10, 10, 10)
-    h_overlap = 0
-    v_overlap = 0
-    grid_size = []  
-    for i in range(uav_num): 
-        grid_width, grid_height = calculate_grid_size_from_hfov_and_vfov(h_fov[i], v_fov[i], uav_alt[i])
-        overlapped_grid_width, overlapped_grid_height = calculate_overlapped_grid_size(grid_width, grid_height, h_overlap, v_overlap)
-        grid_size.append((overlapped_grid_width, overlapped_grid_height))
-    # print(grid_size)
-    return grid_size
-#HaoNV35 End.
 
 def remove_duplicate_pts(vertices):
     """
