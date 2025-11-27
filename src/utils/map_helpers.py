@@ -292,18 +292,18 @@ def split_polygon_into_areas(vertices, number_of_parts):
     #Split a polygon defined by the given vertices into a number of area-equal parts.
 
     # global angle, midpoint, min_lat, min_lon
-    positions = vertices
     number_of_part = number_of_parts
-    min_lat = min(positions, key=lambda x: x[0])[0]
-    min_lon = min(positions, key=lambda x: x[1])[1]
+    min_lat = min(vertices, key=lambda x: x[0])[0]
+    min_lon = min(vertices, key=lambda x: x[1])[1]
 
     # Convert the geographic positions to Cartesian coordinates
-    cartesian_coordinates = convert_to_cartesian(positions)
+    cartesian_coordinates = convert_to_cartesian(vertices)
+    print("Cartesian Coordinates:", cartesian_coordinates)
 
     # Find the largest edge
     _, longest_edge_point = find_longest_edge(cartesian_coordinates)
 
-    foot_of_polygon_altitude, farthest_point, polygon_height= calculate_area_height(cartesian_coordinates)
+    foot_of_polygon_altitude, farthest_point, polygon_height = calculate_area_height(cartesian_coordinates)
     # print(f"\nFarthest Point: {farthest_point}")
 
     # Find midpont of largest edge
@@ -576,7 +576,7 @@ def generate_waypoints(area_vertices, grid_size, i):
     # print("grid width, height: ", default_grid_width, default_grid_height)
 
     number_of_rows = int(area_height/default_grid_height) + 1
-    print("number of rows: ", number_of_rows)
+    # print("number of rows: ", number_of_rows)
 
     longest_edge_length, longest_edge_coord = find_longest_edge(area_vertices)
     # print("coord, longest_edge_length: ", longest_edge_coord, longest_edge_length)
@@ -590,15 +590,15 @@ def generate_waypoints(area_vertices, grid_size, i):
     new_grid_height = area_height / number_of_rows
     intersection_points, segment_length, is_up = find_parallel_polygon_intersection(area_vertices, new_grid_height, number_of_rows)
     new_grid_width = []
-    root_grid = (longest_edge_length - default_grid_width) / (int(area_width / default_grid_width))
-    new_grid_width.insert(0, root_grid)
+    root_grid = (longest_edge_length - default_grid_width) / (int(longest_edge_length / default_grid_width))
+    # new_grid_width.insert(0, root_grid)
+    new_grid_width.append(root_grid)
     for i in range(len(segment_length)):
         if not(segment_length[i] < default_grid_width):
             row_grid_width = (segment_length[i] - default_grid_width) / (int(segment_length[i] / default_grid_width))
         else:
             row_grid_width = segment_length[i]
         new_grid_width.append(row_grid_width)
-    #Write a new function here
 
     starting_points = []
     for i in range(1, len(intersection_points), 2):
