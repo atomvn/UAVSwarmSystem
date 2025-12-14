@@ -587,8 +587,15 @@ def generate_waypoints(area_vertices, grid_size, i):
         x_root_coord = longest_edge_coord[1][0] 
         y_root_coord = longest_edge_coord[1][1]
 
-    new_grid_height = area_height / number_of_rows
-    intersection_points, segment_length, is_up = find_parallel_polygon_intersection(area_vertices, new_grid_height, number_of_rows)
+    # new_grid_height = area_height / number_of_rows
+    # intersection_points, segment_length, is_up = find_parallel_polygon_intersection(area_vertices, new_grid_height, number_of_rows)
+    if number_of_rows > 2:
+        new_grid_height = (area_height - (2 * default_grid_height)) / (number_of_rows - 2)
+        offset = default_grid_height
+    else: 
+        new_grid_height = (area_height - default_grid_height)
+        offset = default_grid_height/2 + new_grid_height/2
+    intersection_points, segment_length, is_up = find_parallel_polygon_intersection(area_vertices, offset, new_grid_height, number_of_rows)
     new_grid_width = []
     root_grid = (longest_edge_length - default_grid_width) / (int(longest_edge_length / default_grid_width))
     # new_grid_width.insert(0, root_grid)
@@ -615,24 +622,32 @@ def generate_waypoints(area_vertices, grid_size, i):
 
     points = []
     segment_length.insert(0, longest_edge_length)
+    # print("Segment lengths:", segment_length)
     for i in range(number_of_rows): 
         for j in range(int(segment_length[i]/default_grid_width) + 1):
             if is_up:
                 if 0 == i:
                     x = x_root_coord + default_grid_width / 2 + (j * new_grid_width[i])
-                    y = y_root_coord + new_grid_height / 2 
+                    y = y_root_coord + default_grid_height / 2 
+                elif i == number_of_rows - 1 and i != 1:
+                    x = starting_points[i-1][0] + default_grid_width/2 + (j * new_grid_width[i])
+                    y = starting_points[i-1][1] + default_grid_height/2
                 else:
                     x = starting_points[i-1][0] + default_grid_width/2 + (j * new_grid_width[i])
                     y = starting_points[i-1][1] + new_grid_height/2
             else:
                 if 0 == i:
                     x = x_root_coord + default_grid_width / 2 + (j * new_grid_width[i])
-                    y = y_root_coord - new_grid_height / 2 
+                    y = y_root_coord - default_grid_height / 2 
+                elif i == number_of_rows -1 and i != 1:
+                    x = starting_points[i-1][0] + default_grid_width/2 + (j * new_grid_width[i])
+                    y = starting_points[i-1][1] - default_grid_height/2
                 else:
                     x = starting_points[i-1][0] + default_grid_width/2 + (j * new_grid_width[i])
                     y = starting_points[i-1][1] - new_grid_height/2
             points.append((x, y))
-    # print("generated points: ", points)
+    print(f"number of points: {len(points)}")
+    print("generated points: ", points)
     return points
 
 #HaoNV35 Start.

@@ -934,24 +934,67 @@ def find_zigzag_path(points, uav_init_point):
             i += 2
     sub_list[j].append(points[-1])
 
+    # j += 1
     points_on_row = [[] for i in range(j+1)] 
     for i in range(j+1):
         points_on_row[i] = sub_list[i]
-        print(f"points_on_row{i+1}: ", points_on_row[i])
 
     start_distance = distance_between_points(uav_init_point, points_on_row[0][0])
+    # print("start_distance: ", start_distance)
     end_distance = distance_between_points(uav_init_point, points_on_row[0][-1])
-    if start_distance > end_distance:
-        for i in range(len(points_on_row)):
-            if i % 2 == 0:
-                points_on_row[i].reverse()
-    else:
+    # print("end_distance: ", end_distance)
+    start_point_on_last_row = distance_between_points(uav_init_point, points_on_row[-1][0])
+    # print("start_point_on_last_row: ", start_point_on_last_row)
+    end_point_on_last_row = distance_between_points(uav_init_point, points_on_row[-1][-1]) 
+    # print("end_point_on_last_row:", end_point_on_last_row)
+    start_point = min(start_distance, end_distance, start_point_on_last_row, end_point_on_last_row)
+
+    # print("start_point: ", start_point)
+    print("Number of rows: ", j+1)
+    if start_point == start_distance:
+        # print("start_point == start_distance")
         for i in range(len(points_on_row)):
             if i % 2 != 0:
                 points_on_row[i].reverse()
+    elif start_point == end_distance:
+        # print("start_point == end_distance")
+        for i in range(len(points_on_row)):
+            if i % 2 == 0:
+                points_on_row[i].reverse()
+    elif start_point == start_point_on_last_row:
+        # print("start_point == start_point_on_last_row")
+        if j % 2 == 0:
+            for i in range(len(points_on_row)):
+                if i % 2 != 0:
+                    points_on_row[i].reverse()
+        else:
+            for i in range(len(points_on_row)):
+                if i % 2 == 0:
+                    points_on_row[i].reverse()
+    elif start_point == end_point_on_last_row:
+        # print("start_point == end_point_on_last_row")
+        if j % 2 != 0:
+            for i in range(len(points_on_row)):
+                if i % 2 != 0:
+                    points_on_row[i].reverse()
+        else:
+            for i in range(len(points_on_row)):
+                if i % 2 == 0:
+                    points_on_row[i].reverse()
     final_path = []
-    for i in range(len(points_on_row)):
-        final_path.extend(points_on_row[i])
+    if start_point == start_distance or start_point == end_distance:
+        for i in range(len(points_on_row)):
+            final_path.extend(points_on_row[i])
+    else:
+        for i in range(len(points_on_row) - 1, -1, -1):
+            final_path.extend(points_on_row[i])
+    distance = 0
+    for i in range(1, len(final_path)):
+        lon1, lat1 = final_path[i-1]
+        lon2, lat2 = final_path[i]
+        d = distance_between_points((lon1, lat1), (lon2, lat2))
+        distance += d
+    print("distance: ", distance)
     return final_path
 
 def calculate_grid_size_from_hfov_and_vfov(h_fov, v_fov, uav_alt):
@@ -992,7 +1035,7 @@ def find_line_segment_intersection(line, segment_point1, segment_point2):
             return (x_line, line)
     return None
 
-def find_parallel_polygon_intersection(area_vertices, spacing, number_of_lines):
+def find_parallel_polygon_intersection(area_vertices, default_grid_height, spacing, number_of_lines):
     longest_edge_length, longest_edge_endpoints = find_longest_edge(area_vertices)
     x1, y1 = longest_edge_endpoints[0]
     x2, y2 = longest_edge_endpoints[1]
@@ -1000,10 +1043,19 @@ def find_parallel_polygon_intersection(area_vertices, spacing, number_of_lines):
     area_max_y = max(v[1] for v in area_vertices)
 
     intersection_points = []
-    for i in range(-number_of_lines, number_of_lines + 1):
+    for i in range(-number_of_lines + 1, number_of_lines):
         if i == 0:
             continue
-        line = y1 + i * spacing
+        elif i == -1:
+            line = y1 - default_grid_height 
+        elif i < -1: 
+            line = y1 - default_grid_height + (spacing * (i+1))
+        elif i == 1:
+            line = y1 + default_grid_height
+        elif i > 1:
+            line = y1 + default_grid_height + (spacing * (i-1))
+        else:
+            continue
         if area_min_y < line < area_max_y:
             for j in range(len(area_vertices)):
                 x3, y3 = area_vertices[j]
@@ -1028,7 +1080,6 @@ def find_parallel_polygon_intersection(area_vertices, spacing, number_of_lines):
         # print("Length:", length)
         if length > 0: 
             segment_length.append(length)
-    # print("Segment lengths:", segment_length)
     return intersection_points, segment_length, is_up
 
 
@@ -1048,16 +1099,16 @@ def split_polygon_into_equal_areas(low, high, perp_slope, polygon, longest_edge_
         area_below.append(area)
         under_edge = intersections
         low = lowest
-    print(f"AREA BELOW: {area_below}")
-    print(f"Perpendicular Points: {per_points}")
-    print(f"PARALLEL LINE POLYGON INTERSECTIONS: {parallel_line_polygon_intersections}")
+    # print(f"AREA BELOW: {area_below}")
+    # print(f"Perpendicular Points: {per_points}")
+    # print(f"PARALLEL LINE POLYGON INTERSECTIONS: {parallel_line_polygon_intersections}")
     return per_points, parallel_line_polygon_intersections
 
 
 
 def find_area_based_polygon_line_cut(low, high, perp_slope, polygon, under_edge, target_area):
     max_iter = 100
-    epsilon = 50
+    epsilon = 10
     for _ in range(max_iter):
         # Find binary search midpoint
         mid = ((low[0] + high[0]) / 2, (low[1] + high[1]) / 2)
