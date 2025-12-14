@@ -114,8 +114,13 @@ class App(Map, StreamQtThread, Interface, QtWidgets.QWidget):
             level="info",
         )
         #
+        self.is_at_first_point = [asyncio.Event() for _ in range(1, MAX_UAV_COUNT + 1)]
         self.init_application()
         logger.log("Application initialized successfully", level="info")
+        #HaoNV35
+        self.last_mission_update = {}  # Dictionary để lưu thời gian cuối cho từng UAV
+        for i in range(1, MAX_UAV_COUNT + 1):
+            self.last_mission_update[i] = 0
 
     # ---------------------------------------------------------
 
@@ -1677,6 +1682,14 @@ class App(Map, StreamQtThread, Interface, QtWidgets.QWidget):
         self.uav_information_views[uav_index - 1].setText(
             self.template_information(uav_index, **UAVs[uav_index]["status"])
         )
+
+    #HaoNV35
+    def update_mission_progress(self, uav_index):
+        global UAVs
+        current_latitude = UAVs[uav_index]["status"]["position_status"][0]
+        current_longitude = UAVs[uav_index]["status"]["position_status"][1]
+        colors = ["red", "blue", "green", "yellow", "purple", "orange"]
+        self.draw_rectangle_with_center_point([current_latitude, current_longitude], options=dict(color = colors[uav_index-1], weight = 5))
         
     def set_connection_display(self, uav_index, uav_status):
         """
@@ -1793,16 +1806,33 @@ class App(Map, StreamQtThread, Interface, QtWidgets.QWidget):
                 # Update the UI
                 self._update_uav_info_display(uav_index)
                 
+
+                # Get current GPS coordinates
+                    # print("uav_lat, lon: ", gps_data[0])
+                # first_waypoint_lat = self.first_waypoint[uav_index][0]
+                # first_waypoint_long = self.first_waypoint[uav_index][1]
+                # last_waypoint_lat = self.last_waypoint[0]
+                # last_waypoint_long = self.last_waypoint[11]
+
+                # if not self.is_at_first_point[uav_index].is_set():
+                    # if abs(first_waypoint_lat - latitude) < 0.001 and abs(first_waypoint_long - longitude) < 0.001:
+                    #     self.is_at_first_point[uav_index].set()
+                    #     print(f"is at uav {uav_index} first waypoint: {self.is_at_first_point[uav_index]}")
+                # if abs(last_waypoint_lat - latitude) < 0.0001 and abs(last_waypoint_long - longitude) < 0.0001:
+                #     self.is_at_first_point[uav_index].clear()
+
+                #HaoNV35
                 # show on map
                 self.move_drone_markers(uav_index, latitude, longitude)
                 # self.show_drones(init=False)
+                current_time = time.time()
+                if current_time - self.last_mission_update.get(uav_index, 0) >= 1.0:
+                    self.update_mission_progress(uav_index)
+                    self.last_mission_update[uav_index] = current_time               # self.update_mission_progress(uav_index)
                     
-                # Only process one position update per call, comment out if you want to make it continuous
-                # break
-                
         except Exception as e:
             logger.log(f"Failed to get position for UAV {uav_index}: {e}", level="error")
-                
+            print(f"Failed to get position for UAV {uav_index}: {e}") 
         return
     
     def _update_position_log(self, uav_index, latitude, longitude):
