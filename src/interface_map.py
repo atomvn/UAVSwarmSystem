@@ -75,6 +75,9 @@ class Map(Interface):
     drone_num = 5
     gridSize = 10  # meters
 
+    # Grid poins
+    grid_points = []
+
     # State tracking
     drone_path_enabled = False
     reduced_grid_points = False
@@ -231,6 +234,35 @@ class Map(Interface):
                 # First path: from drone to first grid point
                 start = self.drone_position_list[ind]
                 end = value[0]
+                self.first_waypoint[ind] = value[0]
+                # self.last_waypoint[ind] = value[3]
+                # with open(waypoints_files[ind - 1], "r") as f:
+                #     gps_data = f.readlines()
+                #     first_waypoint = gps_data[0].split(",")
+                #     uav_lat = float(first_waypoint[0])
+                #     uav_long = float(first_waypoint[1])
+                #     print("uav_lat, lon: ", gps_data[0])
+
+                # is_at_first_point = False
+                # if abs(uav_lat - end[0]) < 0.001 and abs(uav_long - end[1]) < 0.001:
+                #     is_at_first_point = True
+                #     print(is_at_first_point)
+                # if is_at_first_point:
+                #HaoNV35
+                coord = value[0]
+                angle = self.angle
+                # print(f"Angle: {angle}")
+                for coord in value:
+                    self.rescue_map.drawRectangleWithCenter(
+                        coord,
+                        angle,
+                        options=dict(color=color, weight = 0.01, opacity = 0.0005)
+                    )
+                    self.ovv_map.drawRectangleWithCenter(
+                        coord, 
+                        angle, 
+                        options=dict(color=color, weight = 0.01, opacity = 0.0005)
+                    )
 
                 path_key = f"A{ind + 1}P{0}-{1}"
                 self.rescue_map.drawPolyLine(
@@ -296,6 +328,10 @@ class Map(Interface):
 
             # Generate new grid points by splitting the area
             grid_points = split_grids(self.rotated_area_list, *self.extra, grid_size, n_areas)
+
+            #Store grid points
+            self.grid_points = grid_points
+            # print("Grid points split grid: ", grid_points)
 
             # Update state
             self.multi_area = n_areas > 1
@@ -367,10 +403,11 @@ class Map(Interface):
         """Process and display grid points for a single area"""
         # Find optimal path through points
         ordered_points = find_zigzag_path(area_points, self.drone_position_list[0])
+        # ordered_points = best_path_sw_uav(area_points, self.drone_position_list[0])
         ordered_points = remove_duplicate_pts(ordered_points)
 
         # Check if there are too many points
-        if len(ordered_points) > 100:
+        if len(ordered_points) > 150:
             logger.log("Too many points to plot, try to increase grid size!", level="warning")
             return
 
@@ -532,7 +569,8 @@ class Map(Interface):
             logger.info(f"Splitting area into {n_areas} parts")
             
             splitted_areas, rotated_area_list, angle, midpoint, min_lat, min_lon = (
-                split_polygon_into_areas_old(polygon_points, n_areas)
+                # split_polygon_into_areas_old(polygon_points, n_areas)
+                split_polygon_into_areas(polygon_points, n_areas)
             )
 
             # Draw the split areas on the map
@@ -565,6 +603,8 @@ class Map(Interface):
                         file.write(f"{lat}, {lon}\n")
 
             # Store for later use
+            self.splitted_areas = splitted_areas
+            self.angle = angle
             self.rotated_area_list = rotated_area_list
             self.extra = (angle, midpoint, min_lat, min_lon)
 
@@ -1050,6 +1090,19 @@ class Map(Interface):
     def move_drone_markers(self, uav_index, lat, lon):
         self.rescue_map.moveMarker(f"uav_{uav_index}", lat, lon)
         self.ovv_map.moveMarker(f"uav_{uav_index}", lat, lon)
+    
+    def draw_rectangle(self, coords: List[List[float]], options: dict = {}):
+        self.rescue_map.drawRectangle(coords, **options)
+        self.ovv_map.drawRectangle(coords, **options)
+
+    def draw_rectangle_with_center_point(self, coord: List, options: dict):
+        try:
+            angle = self.angle
+            self.rescue_map.drawRectangleWithCenter(coord, angle, options)
+            self.ovv_map.drawRectangleWithCenter(coord, angle, options)
+        except Exception as e:
+            print("Error when draw rectangle", e)
+
 
     def update_drone_positions(self):
         """

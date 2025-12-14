@@ -541,6 +541,17 @@ class MapEngine(QWebEngineView):
         return self.runScript(f"deletePolygonJs(key={json.dumps(key)});")
         
     #HaoNV35 Start.
+    def drawRectangle(self, coords: List[List[float]], options: dict = {}) -> Any:
+        return self.runScript(
+            f"drawRectangleJs(coords={json.dumps(coords)}, options={json.dumps(options)});"
+        )
+    
+    def deleteRectangle(self) -> Any:
+        return self.runScript(f"deleteRectangleJs();")
+
+    def drawRectangleWithCenter(self, coord: List, angle, options: dict) -> Any:
+        return self.runScript(f"drawRectangleWithCenterJs({json.dumps(coord)}, {json.dumps(angle)}, {json.dumps(options)});")
+
     def deleteAllAreas(self) -> Any:
         return self.runScript(f"deleteAllAreasJs();")
     #HaoNV35 End.

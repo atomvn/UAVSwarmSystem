@@ -9,9 +9,13 @@ var lines = [];
 
 var polygons = [];
 
+var rectangles = []
+
 var lineCounter = 0;
 
 var polygonCounter = 0;
+
+var rectangleCounter = 0
 
 var markerCounter = 0;  // Initialize a counter for markers
 
@@ -295,6 +299,74 @@ function deletePolygonJs(key) {
 }
 
 //HaoNV35 Start.
+function drawRectangleJs(coords, options) {
+    var rectangle = L.rectangle(coords, options);
+    rectangle.addTo(map);
+}
+
+function drawRectangleWithCenterJs(coord, angle, options){
+    var center = L.latLng(coord[0], coord[1]);
+    let recWidth = 23.8350718518842;
+    let recHeight = 9.754651771317228;
+    // var rect = rectangleFromCenter(center, recWidth, recHeight, options);
+    angle = parseFloat(angle);
+    var rect = drawRotatedRectangle(coord, recWidth, recHeight, angle, options);
+    rect.addTo(map);
+}
+
+function rectangleFromCenter(center, widthMeters, heightMeters, options) { 
+    var latOffset = (heightMeters / 2) / 111320; 
+    var lngOffset = (widthMeters / 2) / (111320 * Math.cos(center.lat * Math.PI/180)); 
+    var bounds = [ [center.lat - latOffset, center.lng - lngOffset], [center.lat + latOffset, center.lng + lngOffset] ]; 
+    return L.rectangle(bounds, options); 
+}
+
+function drawRotatedRectangle(coord, widthMeters, heightMeters, angleDeg, options) {
+    var center = L.latLng(coord[0], coord[1]);
+
+    var angle = angleDeg * Math.PI / 180; // đổi sang radian
+
+    // radius theo mét
+    var halfW = widthMeters / 2;
+    var halfH = heightMeters / 2;
+
+    // chuyển mét sang độ
+    var latMeter = 1 / 111320;
+    var lngMeter = 1 / (111320 * Math.cos(center.lat * Math.PI / 180));
+
+    // 4 điểm trước khi xoay (dx, dy)
+    var corners = [
+        [-halfW, -halfH],  // bottom-left
+        [ halfW, -halfH],  // bottom-right
+        [ halfW,  halfH],  // top-right
+        [-halfW,  halfH]   // top-left
+    ];
+
+    var rotated = [];
+
+    for (var i = 0; i < corners.length; i++) {
+        var dx = corners[i][0];
+        var dy = corners[i][1];
+
+        // xoay
+        var x = dx * Math.cos(angle) - dy * Math.sin(angle);
+        var y = dx * Math.sin(angle) + dy * Math.cos(angle);
+
+        // chuyển sang lat/lng
+        var lat = center.lat + y * latMeter;
+        var lng = center.lng + x * lngMeter;
+
+        rotated.push([lat, lng]);
+    }
+
+    // vẽ polygon
+    return L.polygon(rotated, options);
+}
+
+function deleteRectangleJs() {
+    map.removeLayer(rectangle);
+}
+
 function deleteAllAreasJs() {
     for (i in map._layers) {
         if(map._layers[i]._path != undefined) {
