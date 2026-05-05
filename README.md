@@ -1,12 +1,15 @@
-# Swarm UAVs project for VNU University of Engineering and Technology – VNU-UET
+# UAV swarm system for SAR missions
+---
+UAV swarm system project is developed to solve problems in SAR missions after disasters such as: typhoon, hurricane, landslide...
+
+# How to install and run the project
+---
+This section provides a list of prerequisites for this project as well as instructions on running it.
 
 ## Hardware requirements:
+Ubuntu 20.04 with minimum of 16GB RAM and 60GB available ROM, and external GPU (optional)
 
-Ubuntu 20.04 with minimum 16GB RAM and 60GB available ROM, and external GPU (optional)
-
-ROS-Noetic / ROS-Foxy
-
-## Setups:
+## Required tools and packages:
 
 ### 0. [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/)
 
@@ -14,7 +17,7 @@ ROS-Noetic / ROS-Foxy
 bash cmd/setup_miniconda.sh
 ```
 
-### 1. Setup OpenCV:
+### 1. OpenCV:
 
 ```
 bash cmd/setup_opencv.sh
@@ -26,9 +29,6 @@ Follow this instruction to install ROS: [Install ROS Noetic](https://wiki.ros.or
 
 Then, to install [Gazebo 9](https://classic.gazebosim.org/tutorials?cat=install&tut=install_ubuntu&ver=9.0)
 
-```
-bash cmd/setup_ROS_GZ.sh
-```
 -Check if gazebo is installed:
 
 ```
@@ -41,7 +41,7 @@ gazebo
 bash cmd/setup_px4.sh
 ```
 
-And check the results by:
+You can check the result by running the following command in your bash shell:
 
 ```
 dependencies/PX4-Autopilot/Tools/simulation/gazebo-classic/sitl_multiple_run.sh -n 6 -m iris
@@ -67,40 +67,29 @@ bash cmd/setup_qt.sh
 
 ### 7. [QGroundControl Ground Control Station](https://github.com/mavlink/qgroundcontrol/releases) (Optional)
 
-### 8. Install Python requirements
+### 8. Create a conda environment from the environment.yml file:
 
 ```
-pip install -r requirements.txt
-pip install -r requirements-refine.txt
-pip install mavsdk asyncio --force
+conda create --file environment.yml
 ```
 
-## Run program
+## Run the program
 
-### 1. Run all:
+### 1. Run all (Desktop app, Gazebo):
 
 ```
 python src/main.py
 ```
 
-### 2. Run only UI
+### 2. Run only the desktop app
 
 ```
 python src/app.py
 ```
 
-```
-python src/interface_base.py
-```
-
-      ```
-
-python src/interface_map.py
-
-```
 ## Debug
 
-1. Check opening ports
+1. Check opening UCP/TCP ports
 TCP
 
 ```
@@ -124,8 +113,3 @@ UARTs
      ls /dev/tty*
 
 ````
-2. Debug programs
-```Interface
-   gdb --agrs python src/app.py
-````
-
